@@ -1,0 +1,21 @@
+# 의존성
+node_modules/
+package-lock.json
+
+# 환경 변수
+.env
+.env.*
+
+# 로그
+logs/
+*.log
+npm-debug.log*
+
+# 운영체제 파일
+.DS_Store
+Thumbs.db
+
+# IDE 설정
+.idea/
+.vscode/
+*.sublime-*
