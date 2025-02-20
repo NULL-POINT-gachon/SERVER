@@ -3,17 +3,29 @@
 
 ## 폴더 구조
 backend/
+
 ├── src/
+
 │   ├── config/         # 환경설정, DB연결정보
+
 │   ├── controllers/    # 요청 처리, 응답 반환
+
 │   ├── dtos/           # 데이터 전송 객체
+
 │   ├── middlewares/    # 인증, 로깅, 오류 처리
+
 │   ├── repositories/   # 데이터 접근 로직
+
 │   ├── routes/         # API 엔드포인트 정의
+
 │   ├── services/       # 비즈니스 로직
+
 │   └── index.js        # 앱 진입점
+
 ├── .env                # 환경 변수 (git에 포함하지 않음)
+
 ├── .gitignore          # git 제외 파일 목록
+
 └── package.json        # 프로젝트 메타데이터, 의존성
 
 ## 브랜치 관리 전략
