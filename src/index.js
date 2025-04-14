@@ -13,6 +13,15 @@ app.use(cors());
 app.use(helmet());
 app.use(express.json());
 
+const userRoutes = require('./routes/userRoute');
+
+
+// 라우트
+app.use('/user',userRoutes );
+
+// 에러 핸들링
+
+
 // Swagger 설정
 const swaggerOptions = {
   definition: {
@@ -29,7 +38,7 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ['./routes/*.js'],
+  apis: ['src/routes/*.js'],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
