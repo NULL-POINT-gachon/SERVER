@@ -34,6 +34,37 @@ const registerUser = async (userData) => {
   return userDto.toResponse(newUser);
 };
 
+const createGoogleUser = async ({ email, name }) => {
+  // 소셜 로그인은 'google:사용자ID'와 같은 형식으로 저장
+  const googleId = `google:${email}`;
+  const hashedId = await bcrypt.hash(googleId, 10);
+  
+  const userId = await userRepository.createUser({
+    name,
+    email,
+    password: hashedId,  // 비밀번호 필드에 해싱된 소셜ID 저장
+    age: null,
+    gender: null,
+    residence: null
+  });
+  
+  const newUser = await userRepository.findUserById(userId);
+  return newUser;
+};
+
+const updateUserProfile = async (userId, profileData) => {
+  await userRepository.updateUser(userId, profileData);
+  const user = await userRepository.findUserById(userId);
+  return user;
+};
+
+const findUserByEmail = async (email) => {
+  const user = await userRepository.findUserByEmail(email);
+  return user;
+};
 module.exports = {
-  registerUser
+  registerUser ,
+  createGoogleUser,
+  updateUserProfile , 
+  findUserByEmail
 };

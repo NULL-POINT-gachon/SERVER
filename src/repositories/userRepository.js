@@ -42,6 +42,34 @@ const createUser = async (userData) => {
     throw error;
   }
 };
+const updateUser = async (userId, userData) => {
+  const updateFields = [];
+  const values = [];
+  
+  Object.entries(userData).forEach(([key, value]) => {
+    if (value !== undefined) {
+      updateFields.push(`${key} = ?`);
+      values.push(value);
+    }
+  });
+  
+  if (updateFields.length === 0) return;
+  
+  const query = `
+    UPDATE User 
+    SET ${updateFields.join(', ')}, updated_at = NOW() 
+    WHERE id = ?
+  `;
+  
+  values.push(userId);
+  
+  try {
+    const [result] = await db.execute(query, values);
+    return result.affectedRows > 0;
+  } catch (error) {
+    throw error;
+  }
+};
 
 module.exports = {
   findUserByEmail,
