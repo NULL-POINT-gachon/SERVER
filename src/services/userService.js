@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/userRepository');
 const userDto = require('../dtos/userDto');
 
@@ -62,9 +63,32 @@ const findUserByEmail = async (email) => {
   const user = await userRepository.findUserByEmail(email);
   return user;
 };
+
+const loginUser = async (email, password) => {
+  const user = await userRepository.findUserByEmail(email);
+  
+  if (!user) {
+    throw { status: 401, message: '이메일 또는 비밀번호가 일치하지 않습니다' };
+  }
+  
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw { status: 401, message: '이메일 또는 비밀번호가 일치하지 않습니다' };
+  }
+  
+  const token = jwt.sign(
+    { userId: user.id },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+  
+  return { user, token };
+};
+
 module.exports = {
   registerUser ,
   createGoogleUser,
   updateUserProfile , 
-  findUserByEmail
+  findUserByEmail ,
+  loginUser
 };
