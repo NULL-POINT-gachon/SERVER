@@ -74,5 +74,6 @@ const updateUser = async (userId, userData) => {
 module.exports = {
   findUserByEmail,
   findUserById,
-  createUser
+  createUser , 
+  updateUser
 };

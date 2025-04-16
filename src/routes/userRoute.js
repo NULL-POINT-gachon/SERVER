@@ -220,5 +220,47 @@ router.post('/login', userController.login);
 router.get('/profile', authMiddleware.authenticateToken, userController.getUserProfile);
 
 
+/**
+ * @swagger
+ * /user/profile:
+ *   patch:
+ *     summary: 사용자 프로필 수정
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               age:
+ *                 type: integer
+ *               gender:
+ *                 type: string
+ *               residence:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 프로필 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       401:
+ *         description: 인증 실패
+ */
+//사용자 정보 수정
+router.patch('/profile', authMiddleware.authenticateToken, userController.updateUserProfile);
 
 module.exports = router;
