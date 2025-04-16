@@ -64,6 +64,14 @@ const findUserByEmail = async (email) => {
   return user;
 };
 
+// 토큰발급
+const generateToken = (userId, options = {}) => {
+  const payload = { userId, ...options };
+  const expiresIn = options.needsCompletion ? '1h' : '24h';
+  
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
+};
+
 const loginUser = async (email, password) => {
   const user = await userRepository.findUserByEmail(email);
   
@@ -76,11 +84,7 @@ const loginUser = async (email, password) => {
     throw { status: 401, message: '이메일 또는 비밀번호가 일치하지 않습니다' };
   }
   
-  const token = jwt.sign(
-    { userId: user.id },
-    process.env.JWT_SECRET,
-    { expiresIn: '24h' }
-  );
+  const token = generateToken(user.id);
   
   return { user, token };
 };
@@ -90,5 +94,6 @@ module.exports = {
   createGoogleUser,
   updateUserProfile , 
   findUserByEmail ,
-  loginUser
+  loginUser ,
+  generateToken
 };

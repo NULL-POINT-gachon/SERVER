@@ -61,21 +61,14 @@ const googleCallback = async (req, res) => {
       user = await userService.createGoogleUser({ email, name });
       
       // 프로필 완성을 위한 임시 토큰 생성
-      const tempToken = jwt.sign(
-        { userId: user.id, needsCompletion: true },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
+      const tempToken = userService.generateToken(user.id, { needsCompletion: true });
       
       return res.redirect(`/complete-profile?token=${tempToken}`);
     }
     
     // 정상 토큰 발급
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    const token = userService.generateToken(user.id);
+
     
     res.redirect(`/?token=${token}`);
   } catch (error) {
