@@ -100,6 +100,11 @@ const getUserById = async (userId) => {
 
 };
 
+// 계정 비활성화
+const deactivateUser = async (userId) => {
+  return await userRepository.updateUser(userId, { status: 0 });
+};
+
 module.exports = {
   registerUser ,
   createGoogleUser,
@@ -107,5 +112,6 @@ module.exports = {
   findUserByEmail ,  
   loginUser ,
   generateToken ,
-  getUserById
+  getUserById ,
+  deactivateUser
 };
