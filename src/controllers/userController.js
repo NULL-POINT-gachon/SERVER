@@ -155,6 +155,25 @@ const getUserProfile = async (req, res, next) => {
   }
 };
 
+//사용자 정보 수정 
+const updateUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { name, age, gender, residence } = req.body;
+    
+    const updatedUser = await userService.updateUserProfile(userId, {
+      name, age, gender, residence
+    });
+    
+    res.status(200).json({
+      success: true,
+      message: '프로필이 업데이트되었습니다',
+      data: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   signup ,
@@ -162,5 +181,6 @@ module.exports = {
   googleCallback,
   completeProfile ,  
   login ,
-  getUserProfile
+  getUserProfile ,
+  updateUserProfile
 };
