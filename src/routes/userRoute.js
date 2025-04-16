@@ -263,4 +263,32 @@ router.get('/profile', authMiddleware.authenticateToken, userController.getUserP
 //사용자 정보 수정
 router.patch('/profile', authMiddleware.authenticateToken, userController.updateUserProfile);
 
+
+/**
+ * @swagger
+ * /user/deactivate:
+ *   patch:
+ *     summary: 사용자 계정 비활성화
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 계정 비활성화 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: 인증 실패
+ */
+//사용자 회원탈퇴 
+router.patch('/deactivate', authMiddleware.authenticateToken, userController.deactivateUser);
+
 module.exports = router;

@@ -175,6 +175,21 @@ const updateUserProfile = async (req, res, next) => {
   }
 };
 
+// 사용자 계정 비활성화 (소프트 삭제)
+const deactivateUser = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    await userService.deactivateUser(userId);
+    
+    res.status(200).json({
+      success: true,
+      message: '계정이 비활성화되었습니다'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   signup ,
   googleLogin,
@@ -182,5 +197,6 @@ module.exports = {
   completeProfile ,  
   login ,
   getUserProfile ,
-  updateUserProfile
+  updateUserProfile ,
+  deactivateUser
 };
