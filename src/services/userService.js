@@ -62,9 +62,20 @@ const findUserByEmail = async (email) => {
   const user = await userRepository.findUserByEmail(email);
   return user;
 };
+
+// 사용자 ID로 조회
+const getUserById = async (userId) => {
+  const user = await userRepository.findUserById(userId);
+  if (!user) {
+    throw { status: 404, message: '사용자를 찾을 수 없습니다' };
+  }
+  return userDto.toResponse(user);
+};
+
 module.exports = {
   registerUser ,
   createGoogleUser,
   updateUserProfile , 
-  findUserByEmail
+  findUserByEmail ,
+  getUserById
 };

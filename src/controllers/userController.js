@@ -115,10 +115,26 @@ const completeProfile = async (req, res) => {
   }
 };
 
+// 사용자 정보 조회
+const getUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const user = await userService.getUserById(userId);
+    
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 module.exports = {
   signup ,
   googleLogin,
   googleCallback,
-  completeProfile
+  completeProfile ,
+  getUserProfile
 };
