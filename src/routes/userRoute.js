@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-
+const authMiddleware = require('../middlewares/auth');
 /**
  * @swagger
  * /user/signup:
@@ -176,5 +176,49 @@ router.post('/complete-profile', userController.completeProfile);
  *         description: 인증 실패
  */
 router.post('/login', userController.login);
+
+/**
+ * @swagger
+ * /user/profile:
+ *   get:
+ *     summary: 사용자 프로필 조회
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 프로필 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     age:
+ *                       type: integer
+ *                     gender:
+ *                       type: string
+ *                     residence:
+ *                       type: string
+ *       401:
+ *         description: 인증 실패
+ *       404:
+ *         description: 사용자 찾을 수 없음
+ */
+// 사용자 조회
+router.get('/profile', authMiddleware.authenticateToken, userController.getUserProfile);
+
+
 
 module.exports = router;
