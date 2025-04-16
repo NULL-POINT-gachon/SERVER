@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/userRepository');
 const userDto = require('../dtos/userDto');
 
@@ -63,6 +64,32 @@ const findUserByEmail = async (email) => {
   return user;
 };
 
+// 토큰발급
+const generateToken = (userId, options = {}) => {
+  const payload = { userId, ...options };
+  const expiresIn = options.needsCompletion ? '1h' : '24h';
+  
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
+};
+
+const loginUser = async (email, password) => {
+  const user = await userRepository.findUserByEmail(email);
+  
+  if (!user) {
+    throw { status: 401, message: '이메일 또는 비밀번호가 일치하지 않습니다' };
+  }
+  
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw { status: 401, message: '이메일 또는 비밀번호가 일치하지 않습니다' };
+  }
+  
+  const token = generateToken(user.id);
+  
+  return { user, token };
+
+};
+
 // 사용자 ID로 조회
 const getUserById = async (userId) => {
   const user = await userRepository.findUserById(userId);
@@ -70,12 +97,15 @@ const getUserById = async (userId) => {
     throw { status: 404, message: '사용자를 찾을 수 없습니다' };
   }
   return userDto.toResponse(user);
+
 };
 
 module.exports = {
   registerUser ,
   createGoogleUser,
   updateUserProfile , 
-  findUserByEmail ,
+  findUserByEmail ,  
+  loginUser ,
+  generateToken ,
   getUserById
 };

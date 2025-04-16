@@ -1,5 +1,6 @@
 const userService = require('../services/userService');
 const googleClient = require('../middlewares/auth');
+const userDto = require('../dtos/userDto');
 const jwt = require('jsonwebtoken');
 
 const signup = async (req, res, next) => {
@@ -60,21 +61,14 @@ const googleCallback = async (req, res) => {
       user = await userService.createGoogleUser({ email, name });
       
       // 프로필 완성을 위한 임시 토큰 생성
-      const tempToken = jwt.sign(
-        { userId: user.id, needsCompletion: true },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
+      const tempToken = userService.generateToken(user.id, { needsCompletion: true });
       
       return res.redirect(`/complete-profile?token=${tempToken}`);
     }
     
     // 정상 토큰 발급
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    const token = userService.generateToken(user.id);
+
     
     res.redirect(`/?token=${token}`);
   } catch (error) {
@@ -114,6 +108,37 @@ const completeProfile = async (req, res) => {
     res.status(500).json({ success: false, message: '서버 오류가 발생했습니다' });
   }
 };
+const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: '이메일과 비밀번호를 입력해주세요'
+      });
+    }
+    
+    const { user, token } = await userService.loginUser(email, password);
+    
+    res.status(200).json({
+      success: true,
+      message: '로그인 성공',
+      data: {
+        user: userDto.toResponse(user),
+        token
+      }
+    });
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message
+      });
+    }
+    next(error);
+  }
+};
 
 // 사용자 정보 조회
 const getUserProfile = async (req, res, next) => {
@@ -135,6 +160,7 @@ module.exports = {
   signup ,
   googleLogin,
   googleCallback,
-  completeProfile ,
+  completeProfile ,  
+  login ,
   getUserProfile
 };

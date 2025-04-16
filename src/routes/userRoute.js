@@ -135,6 +135,50 @@ router.post('/complete-profile', userController.completeProfile);
 
 /**
  * @swagger
+ * /user/login:
+ *   post:
+ *     summary: 사용자 로그인
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 로그인 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                     token:
+ *                       type: string
+ *       401:
+ *         description: 인증 실패
+ */
+router.post('/login', userController.login);
+
+/**
+ * @swagger
  * /user/profile:
  *   get:
  *     summary: 사용자 프로필 조회
@@ -174,6 +218,7 @@ router.post('/complete-profile', userController.completeProfile);
  */
 // 사용자 조회
 router.get('/profile', authMiddleware.authenticateToken, userController.getUserProfile);
+
 
 
 module.exports = router;
