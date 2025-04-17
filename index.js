@@ -3,17 +3,19 @@ const cors = require('cors');
 const helmet = require('helmet');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
+const tripRoute = require('./src/routes/tripRoute');
+const tripShareRouter = require('./src/routes/tripShareroute');
+
+
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 미들웨어
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
 
-// Swagger 설정
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -35,12 +37,15 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// 라우트 (기본 테스트용)
+// ✅ trip 라우터 등록
+app.use('/trip', tripRoute);
+app.use('/trip/share', tripShareRouter); 
+
+// ✅ 기본 라우트
 app.get('/', (req, res) => {
-  res.json({ message: 'Exclamation API 서버가 실행 중입니다.' });
+  res.send('api 서버 실행 중!');
 });
 
-// 서버 시작
 app.listen(PORT, () => {
   console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
   console.log(`Swagger 문서: http://localhost:${PORT}/api-docs`);
