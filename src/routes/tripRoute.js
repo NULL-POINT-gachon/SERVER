@@ -82,15 +82,10 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  *         description: 전체 이동 거리 및 시간 반환
  */
 
-// 최적 경로 추천 API (거리 기준)
+// ✅ API 라우터들
 router.get('/:tripId/route', tripController.getOptimizedRoute);
-
-// 최적 경로 저장 API
 router.post('/:tripId/route/save', tripController.saveOptimizedRoute);
-
-// 일정 공유 요청 수락/거절 API
 router.put('/:shareId', tripSharecontroller.respondToShare);
-
 router.get('/:tripId/distance', tripController.getTotalDistanceAndTime);
 
 module.exports = router;

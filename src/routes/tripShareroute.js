@@ -93,9 +93,10 @@ const controller = require('../controllers/tripSharecontroller');
  *         description: 공유 요청이 취소되었습니다.
  */
 
-router.post('/', controller.requestShare);     
-router.put('/:shareId', controller.respondToShare); 
-router.get('/received/:userId', controller.getReceivedShares); 
+// ✅ API 라우터
+router.post('/', controller.requestShare);
+router.put('/:shareId', controller.respondToShare);
+router.get('/received/:userId', controller.getReceivedShares);
 router.patch('/:shareId/cancel', controller.cancelShareRequest);
 
 module.exports = router;
