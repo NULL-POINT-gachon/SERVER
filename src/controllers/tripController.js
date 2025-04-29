@@ -28,3 +28,25 @@ exports.getTotalDistanceAndTime = async (req, res) => {
   const result = await tripService.calculateTotalDistanceAndTime(tripId);
   res.status(200).json(result);
 };
+exports.getMapMarkers = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const result = await tripService.getOptimizedRouteByTripId(tripId);
+
+    const mapData = {};
+    for (const [date, places] of Object.entries(result)) {
+      mapData[date] = places.map(place => ({
+        placeId: place.placeId,
+        name: place.name,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        order: place.order
+      }));
+    }
+
+    res.status(200).json(mapData);
+  } catch (error) {
+    console.error('지도 데이터 조회 중 오류:', error);
+    res.status(500).json({ message: '지도 표시용 데이터 불러오기 실패' });
+  }
+};
