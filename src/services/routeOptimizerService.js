@@ -1,5 +1,6 @@
 const tripRepository = require('../repositories/tripRepository');
 const { calculateDistanceMatrix, solveTSP } = require('../utils/optimizerUtils');
+const routeOptimizer = require('./routeOptimizerService');
 
 exports.getOptimizedRouteByTripId = async (tripId) => {
   const placesByDate = await tripRepository.getPlacesGroupedByDate(tripId);
@@ -130,4 +131,11 @@ exports.getPlacesGroupedByDate = async (tripId) => {
       { placeId: 3, name: "개선문", latitude: 48.8738, longitude: 2.2950 }
     ]
   };
+};
+
+
+exports.optimizeScheduleById = async (scheduleId) => {
+  const placesByDate = await tripRepository.getPlacesGroupedByDate(scheduleId);
+  const optimized = await routeOptimizer.getOptimizedRouteByTripId(scheduleId);
+  await tripRepository.updateVisitOrderAndDistanceBulk(scheduleId, optimized);
 };

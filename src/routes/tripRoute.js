@@ -81,11 +81,26 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  *       200:
  *         description: 전체 이동 거리 및 시간 반환
  */
-
+/**
+ * @swagger
+ * /trip/schedule/{scheduleId}/optimize:
+ *   post:
+ *     summary: 일정 기반 최적 경로 재계산
+ *     parameters:
+ *       - in: path
+ *         name: scheduleId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 일정 ID
+ *     responses:
+ *       200:
+ *         description: 최적 경로 계산 결과 반환
+ */
 // ✅ API 라우터들
 router.get('/:tripId/route', tripController.getOptimizedRoute);
 router.post('/:tripId/route/save', tripController.saveOptimizedRoute);
 router.put('/:shareId', tripSharecontroller.respondToShare);
 router.get('/:tripId/distance', tripController.getTotalDistanceAndTime);
-
+router.post('/schedule/:scheduleId/optimize', tripController.optimizeSchedule);
 module.exports = router;
