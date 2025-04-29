@@ -22,6 +22,7 @@ exports.saveOptimizedRoute = async (req, res) => {
       console.error('최적 경로 저장 중 오류:', error);
       res.status(500).json({ message: '최적 경로 저장 실패' });
     }
+}
 exports.getTotalDistanceAndTime = async (req, res) => {
   const tripId = Number(req.params.tripId);
   const result = await tripService.calculateTotalDistanceAndTime(tripId);
