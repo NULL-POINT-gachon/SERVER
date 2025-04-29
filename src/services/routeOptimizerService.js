@@ -131,3 +131,7 @@ exports.getPlacesGroupedByDate = async (tripId) => {
     ]
   };
 };
+
+exports.updateTransportation = async (tripId, transportationId) => {
+  return await tripRepository.updateTransportationForTrip(tripId, transportationId);
+};

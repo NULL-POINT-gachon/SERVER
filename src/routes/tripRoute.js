@@ -81,11 +81,36 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  *       200:
  *         description: 전체 이동 거리 및 시간 반환
  */
-
+/**
+ * @swagger
+ * /trip/{tripId}/transport:
+ *   put:
+ *     summary: 여행 일정의 이동수단 변경
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 여행 일정 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               transportation_id:
+ *                 type: integer
+ *                 description: 변경할 이동수단 ID
+ *     responses:
+ *       200:
+ *         description: 이동수단 변경 완료
+ */
 // ✅ API 라우터들
 router.get('/:tripId/route', tripController.getOptimizedRoute);
 router.post('/:tripId/route/save', tripController.saveOptimizedRoute);
 router.put('/:shareId', tripSharecontroller.respondToShare);
 router.get('/:tripId/distance', tripController.getTotalDistanceAndTime);
-
+router.put('/:tripId/transport', tripController.updateTransportation);
 module.exports = router;

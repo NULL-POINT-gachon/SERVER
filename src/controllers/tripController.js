@@ -22,8 +22,26 @@ exports.saveOptimizedRoute = async (req, res) => {
       console.error('최적 경로 저장 중 오류:', error);
       res.status(500).json({ message: '최적 경로 저장 실패' });
     }
+}
 exports.getTotalDistanceAndTime = async (req, res) => {
   const tripId = Number(req.params.tripId);
   const result = await tripService.calculateTotalDistanceAndTime(tripId);
   res.status(200).json(result);
+};
+exports.updateTransportation = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { transportation_id } = req.body;
+
+    await tripService.updateTransportation(tripId, transportation_id);
+
+    res.status(200).json({
+      tripId: Number(tripId),
+      transportation_id,
+      message: '이동수단 변경 완료'
+    });
+  } catch (error) {
+    console.error('이동수단 변경 중 오류:', error);
+    res.status(500).json({ message: '이동수단 변경 실패' });
+  }
 };
