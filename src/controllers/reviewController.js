@@ -18,3 +18,15 @@ exports.createReview = async (req, res) => {
     res.status(500).json({ message: '리뷰 작성 실패' });
   }
 };
+
+
+exports.getReviewsByPlace = async (req, res) => {
+  try {
+    const destinationId = Number(req.params.destinationId);
+    const reviews = await reviewService.getReviewsByDestination(destinationId);
+    res.status(200).json(reviews);
+  } catch (error) {
+    console.error('리뷰 조회 오류:', error);
+    res.status(500).json({ message: '리뷰 조회 실패' });
+  }
+};
