@@ -83,6 +83,10 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  */
 /**
  * @swagger
+ * /trip/{tripId}/transport:
+ *   put:
+ *     summary: 여행 일정의 이동수단 변경
+
 
  * /trip/{tripId}/map:
  *   get:
@@ -98,6 +102,22 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  *         required: true
  *         schema:
  *           type: integer
+ *         description: 여행 일정 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               transportation_id:
+ *                 type: integer
+ *                 description: 변경할 이동수단 ID
+ *     responses:
+ *       200:
+ *         description: 이동수단 변경 완료
+ */
+
 
  *         description: 지도 표시할 여행 일정 ID
  *     responses:
@@ -117,6 +137,8 @@ router.get('/:tripId/route', tripController.getOptimizedRoute);
 router.post('/:tripId/route/save', tripController.saveOptimizedRoute);
 router.put('/:shareId', tripSharecontroller.respondToShare);
 router.get('/:tripId/distance', tripController.getTotalDistanceAndTime);
+router.put('/:tripId/transport', tripController.updateTransportation);
+
 
 router.get('/:tripId/map', tripController.getMapMarkers);
 

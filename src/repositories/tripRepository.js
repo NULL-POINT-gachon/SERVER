@@ -44,3 +44,14 @@ exports.updateVisitOrderAndDistance = async ({ tripId, placeId, date, order, dis
       [order, distance, tripId, placeId, date]
     );
   };
+  exports.updateTransportationForTrip = async (tripId, transportationId) => {
+    const [result] = await db.query(
+      `
+      UPDATE 여행일정_안에_여행지
+      SET 여행수단 = ?
+      WHERE 여행일정식별자 = ?
+      `,
+      [transportationId, tripId]
+    );
+    return result;
+  };
