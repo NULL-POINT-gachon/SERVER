@@ -30,3 +30,12 @@ exports.getReviewsByPlace = async (req, res) => {
     res.status(500).json({ message: '리뷰 조회 실패' });
   }
 };
+exports.getAllReviews = async (req, res) => {
+  try {
+    const result = await reviewService.getAllReviews();
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('모든 리뷰 조회 오류:', error);
+    res.status(500).json({ message: '리뷰 조회 실패' });
+  }
+};

@@ -42,7 +42,17 @@ const authMiddleware = require('../middlewares/auth');
  *       200:
  *         description: 해당 여행지에 작성된 리뷰 목록 반환
  */
+/**
+ * @swagger
+ * /review/all:
+ *   get:
+ *     summary: 모든 리뷰 목록 조회
+ *     responses:
+ *       200:
+ *         description: 등록된 모든 리뷰를 반환합니다.
+ */
 router.post('/', authMiddleware.authenticateToken, controller.createReview);
 router.get('/place/:destinationId', authMiddleware.authenticateToken, controller.getReviewsByPlace);
+router.get('/all', authMiddleware.authenticateToken, controller.getAllReviews);
 
 module.exports = router;
