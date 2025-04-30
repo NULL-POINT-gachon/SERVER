@@ -1,4 +1,4 @@
-//const db = require('../config/database'); // 이건 너희 프로젝트에서 DB 연결 객체
+const db = require('../config/database'); // 이건 너희 프로젝트에서 DB 연결 객체
 
 // 여행일정 ID로 날짜별 장소 묶어서 가져오기
 exports.getPlacesGroupedByDate = async (tripId) => {
@@ -44,6 +44,40 @@ exports.updateVisitOrderAndDistance = async ({ tripId, placeId, date, order, dis
       [order, distance, tripId, placeId, date]
     );
   };
+// 🧩 1. optimizeScheduleById - scheduleId로 mock 일정 구성
+exports.optimizeScheduleById = async (scheduleId) => {
+    const mock = {
+      "2025-06-01": [
+        { placeId: 1, name: "에펠탑", latitude: 48.8584, longitude: 2.2945 },
+        { placeId: 2, name: "루브르", latitude: 48.8606, longitude: 2.3376 }
+      ],
+      "2025-06-02": [
+        { placeId: 3, name: "개선문", latitude: 48.8738, longitude: 2.2950 }
+      ]
+    };
+  
+    const result = {};
+  
+    for (const [date, places] of Object.entries(mock)) {
+      result[date] = places.map((p, i) => ({
+        ...p,
+        order: i + 1,
+        distanceFromPrevious: i === 0 ? 0 : 3.0
+      }));
+    }
+  
+    await exports.updateVisitOrderAndDistanceBulk(scheduleId, result);
+    return result;
+  };
+  
+  // 🧩 2. updateVisitOrderAndDistanceBulk - console 로그 Mock 처리
+  exports.updateVisitOrderAndDistanceBulk = async (tripId, dataByDate) => {
+    for (const [date, places] of Object.entries(dataByDate)) {
+      for (const place of places) {
+        console.log(`[Mock] ${tripId} | ${place.name} | ${date} | 순서: ${place.order}, 거리: ${place.distanceFromPrevious}`);
+      }
+    }
+
   exports.updateTransportationForTrip = async (tripId, transportationId) => {
     const [result] = await db.query(
       `

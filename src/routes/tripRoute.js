@@ -83,6 +83,21 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  */
 /**
  * @swagger
+ * /trip/schedule/{scheduleId}/optimize:
+ *   post:
+ *     summary: 일정 기반 최적 경로 재계산
+ *     parameters:
+ *       - in: path
+ *         name: scheduleId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 일정 ID
+ *     responses:
+ *       200:
+ *         description: 최적 경로 계산 결과 반환
+ */
+
  * /trip/{tripId}/transport:
  *   put:
  *     summary: 여행 일정의 이동수단 변경
@@ -137,6 +152,8 @@ router.get('/:tripId/route', tripController.getOptimizedRoute);
 router.post('/:tripId/route/save', tripController.saveOptimizedRoute);
 router.put('/:shareId', tripSharecontroller.respondToShare);
 router.get('/:tripId/distance', tripController.getTotalDistanceAndTime);
+router.post('/schedule/:scheduleId/optimize', tripController.optimizeSchedule);
+
 router.put('/:tripId/transport', tripController.updateTransportation);
 
 
