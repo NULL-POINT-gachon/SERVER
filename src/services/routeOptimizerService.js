@@ -138,4 +138,7 @@ exports.optimizeScheduleById = async (scheduleId) => {
   const placesByDate = await tripRepository.getPlacesGroupedByDate(scheduleId);
   const optimized = await routeOptimizer.getOptimizedRouteByTripId(scheduleId);
   await tripRepository.updateVisitOrderAndDistanceBulk(scheduleId, optimized);
+
+exports.updateTransportation = async (tripId, transportationId) => {
+  return await tripRepository.updateTransportationForTrip(tripId, transportationId);
 };

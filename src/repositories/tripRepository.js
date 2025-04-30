@@ -77,4 +77,15 @@ exports.optimizeScheduleById = async (scheduleId) => {
         console.log(`[Mock] ${tripId} | ${place.name} | ${date} | 순서: ${place.order}, 거리: ${place.distanceFromPrevious}`);
       }
     }
+
+  exports.updateTransportationForTrip = async (tripId, transportationId) => {
+    const [result] = await db.query(
+      `
+      UPDATE 여행일정_안에_여행지
+      SET 여행수단 = ?
+      WHERE 여행일정식별자 = ?
+      `,
+      [transportationId, tripId]
+    );
+    return result;
   };

@@ -3,6 +3,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
+const transportationRoute = require('./src/routes/transportationRoute');
+
 require('dotenv').config();
 
 const app = express();
@@ -63,6 +65,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.get('/', (req, res) => {
   res.json({ message: 'Exclamation API 서버가 실행 중입니다.' });
 });
+
+app.use('/transportations', transportationRoute);
 
 // 서버 시작
 app.listen(PORT, () => {
