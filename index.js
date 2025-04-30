@@ -5,6 +5,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 const tripRoute = require('./src/routes/tripRoute');
 const tripShareRouter = require('./src/routes/tripShareroute');
+const transportationRoute = require('./src/routes/transportationRoute');
 
 
 require('dotenv').config();
@@ -40,7 +41,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // ✅ trip 라우터 등록
 app.use('/trip', tripRoute);
 app.use('/trip/share', tripShareRouter); 
-
+app.use('/transportations', transportationRoute);
 // ✅ 기본 라우트
 app.get('/', (req, res) => {
   res.send('api 서버 실행 중!');
