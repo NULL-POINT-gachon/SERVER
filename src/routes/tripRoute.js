@@ -83,25 +83,43 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  */
 /**
  * @swagger
+
+ * /trip/{tripId}/map:
+ *   get:
+ *     summary: 일정별 지도 마커 및 경로 데이터 반환
+
  * /trip/{tripId}/optimize:
  *   post:
  *     summary: 일정 재최적화
+
  *     parameters:
  *       - in: path
  *         name: tripId
  *         required: true
  *         schema:
  *           type: integer
+
+ *         description: 지도 표시할 여행 일정 ID
+ *     responses:
+ *       200:
+ *         description: 날짜별 여행지 좌표 및 순서를 반환합니다.
+ */
+
  *         description: 최적화할 여행 일정 ID
  *     responses:
  *       200:
  *         description: 최적화된 경로 반환
  */
 
+
 // ✅ API 라우터들
 router.get('/:tripId/route', tripController.getOptimizedRoute);
 router.post('/:tripId/route/save', tripController.saveOptimizedRoute);
 router.put('/:shareId', tripSharecontroller.respondToShare);
 router.get('/:tripId/distance', tripController.getTotalDistanceAndTime);
+
+router.get('/:tripId/map', tripController.getMapMarkers);
+
 router.post('/:tripId/optimize', tripController.optimizeTrip); // tripController에서 optimizeTrip 가져다 쓸 것
+
 module.exports = router;
