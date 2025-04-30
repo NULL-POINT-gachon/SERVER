@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const tripController = require('../controllers/tripController');  // 이거 하나만
+const tripController = require('../controllers/tripController');
 const tripSharecontroller = require('../controllers/tripSharecontroller');
+const authMiddleware = require('../middlewares/auth');
 
 /**
  * @swagger
@@ -81,6 +82,7 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  *       200:
  *         description: 전체 이동 거리 및 시간 반환
  */
+
 /**
  * @swagger
  * /trip/schedule/{scheduleId}/optimize:
@@ -98,19 +100,11 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  *         description: 최적 경로 계산 결과 반환
  */
 
+/**
+ * @swagger
  * /trip/{tripId}/transport:
  *   put:
  *     summary: 여행 일정의 이동수단 변경
-
-
- * /trip/{tripId}/map:
- *   get:
- *     summary: 일정별 지도 마커 및 경로 데이터 반환
-
- * /trip/{tripId}/optimize:
- *   post:
- *     summary: 일정 재최적화
-
  *     parameters:
  *       - in: path
  *         name: tripId
@@ -133,32 +127,47 @@ const tripSharecontroller = require('../controllers/tripSharecontroller');
  *         description: 이동수단 변경 완료
  */
 
-
+/**
+ * @swagger
+ * /trip/{tripId}/map:
+ *   get:
+ *     summary: 일정별 지도 마커 및 경로 데이터 반환
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
  *         description: 지도 표시할 여행 일정 ID
  *     responses:
  *       200:
  *         description: 날짜별 여행지 좌표 및 순서를 반환합니다.
  */
 
+/**
+ * @swagger
+ * /trip/{tripId}/optimize:
+ *   post:
+ *     summary: 일정 재최적화
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
  *         description: 최적화할 여행 일정 ID
  *     responses:
  *       200:
  *         description: 최적화된 경로 반환
  */
 
-
 // ✅ API 라우터들
-router.get('/:tripId/route', tripController.getOptimizedRoute);
-router.post('/:tripId/route/save', tripController.saveOptimizedRoute);
-router.put('/:shareId', tripSharecontroller.respondToShare);
-router.get('/:tripId/distance', tripController.getTotalDistanceAndTime);
-router.post('/schedule/:scheduleId/optimize', tripController.optimizeSchedule);
-
-router.put('/:tripId/transport', tripController.updateTransportation);
-
-
-router.get('/:tripId/map', tripController.getMapMarkers);
-
-router.post('/:tripId/optimize', tripController.optimizeTrip); // tripController에서 optimizeTrip 가져다 쓸 것
-
+router.get('/:tripId/route', authMiddleware.authenticateToken, tripController.getOptimizedRoute);
+router.post('/:tripId/route/save', authMiddleware.authenticateToken, tripController.saveOptimizedRoute);
+router.get('/:tripId/distance', authMiddleware.authenticateToken, tripController.getTotalDistanceAndTime);
+router.post('/schedule/:scheduleId/optimize', authMiddleware.authenticateToken, tripController.optimizeSchedule);
+router.put('/:tripId/transport', authMiddleware.authenticateToken, tripController.updateTransportation);
+router.get('/:tripId/map', authMiddleware.authenticateToken, tripController.getMapMarkers);
+router.post('/:tripId/optimize', authMiddleware.authenticateToken, tripController.optimizeTrip);
+router.put('/:shareId', authMiddleware.authenticateToken, tripSharecontroller.respondToShare);
 module.exports = router;

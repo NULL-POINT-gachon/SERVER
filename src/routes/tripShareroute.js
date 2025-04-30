@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/tripSharecontroller');
+const authMiddleware = require('../middlewares/auth');
 
 /**
  * @swagger
@@ -94,9 +95,9 @@ const controller = require('../controllers/tripSharecontroller');
  */
 
 // ✅ API 라우터
-router.post('/', controller.requestShare);
-router.put('/:shareId', controller.respondToShare);
-router.get('/received/:userId', controller.getReceivedShares);
-router.patch('/:shareId/cancel', controller.cancelShareRequest);
+router.post('/', authMiddleware.authenticateToken,controller.requestShare);
+router.put('/:shareId', authMiddleware.authenticateToken,controller.respondToShare);
+router.get('/received/:userId', authMiddleware.authenticateToken,controller.getReceivedShares);
+router.patch('/:shareId/cancel', authMiddleware.authenticateToken,controller.cancelShareRequest);
 
 module.exports = router;
