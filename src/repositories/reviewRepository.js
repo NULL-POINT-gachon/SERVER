@@ -75,3 +75,35 @@ exports.getAllReviews = async () => {
     },
   ];
 };
+exports.findReviewsByUser = async (userId) => {
+  // ⚠️ 실제 DB 쿼리 주석 처리
+  // const [rows] = await db.query(`SELECT * FROM 리뷰 WHERE 사용자식별자 = ?`, [userId]);
+  // return rows;
+
+  // ✅ MOCK DATA
+  return [
+    {
+      reviewId: 101,
+      userId: userId,
+      destinationId: 1,
+      rating: 5,
+      content: '아름다운 경치였어요!',
+      createdAt: '2025-05-01'
+    },
+    {
+      reviewId: 102,
+      userId: userId,
+      destinationId: 2,
+      rating: 4,
+      content: '너무 복잡했어요.',
+      createdAt: '2025-05-02'
+    }
+  ];
+};
+exports.updateReview = async (reviewId, { rating, content }) => {
+  console.log('[Mock] 리뷰 수정:', reviewId, rating, content);
+};
+
+exports.deleteReview = async (reviewId) => {
+  console.log('[Mock] 리뷰 삭제:', reviewId);
+};
