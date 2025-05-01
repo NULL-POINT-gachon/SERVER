@@ -51,8 +51,70 @@ const authMiddleware = require('../middlewares/auth');
  *       200:
  *         description: 등록된 모든 리뷰를 반환합니다.
  */
+/**
+ * @swagger
+ * /review/user/{userId}:
+ *   get:
+ *     summary: 특정 사용자의 리뷰 목록 조회
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 사용자 ID
+ *     responses:
+ *       200:
+ *         description: 리뷰 목록 반환
+ */
+/**
+ * @swagger
+ * /review/{reviewId}:
+ *   put:
+ *     summary: 리뷰 수정
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 수정할 리뷰 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *               content:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 리뷰가 수정되었습니다.
+ */
+/**
+ * @swagger
+ * /review/{reviewId}:
+ *   delete:
+ *     summary: 리뷰 삭제
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 삭제할 리뷰 ID
+ *     responses:
+ *       200:
+ *         description: 리뷰가 삭제되었습니다.
+ */
 router.post('/', authMiddleware.authenticateToken, controller.createReview);
 router.get('/place/:destinationId', authMiddleware.authenticateToken, controller.getReviewsByPlace);
 router.get('/all', authMiddleware.authenticateToken, controller.getAllReviews);
+router.get('/user/:userId', authMiddleware.authenticateToken, controller.getReviewsByUser);
+router.put('/:reviewId', authMiddleware.authenticateToken, controller.updateReview);
+router.delete('/:reviewId', authMiddleware.authenticateToken, controller.deleteReview);
 
 module.exports = router;

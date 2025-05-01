@@ -10,3 +10,13 @@ exports.getReviewsByDestination = async (destinationId) => {
 exports.getAllReviews = async () => {
   return await reviewRepository.getAllReviews();
 };
+exports.getReviewsByUser = async (userId) => {
+  return await reviewRepository.findReviewsByUser(userId);
+};
+exports.updateReview = async (reviewId, data) => {
+  await reviewRepository.updateReview(reviewId, data);
+};
+
+exports.deleteReview = async (reviewId) => {
+  await reviewRepository.deleteReview(reviewId);
+};
