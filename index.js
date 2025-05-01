@@ -7,6 +7,7 @@ const tripRoute = require('./src/routes/tripRoute');
 const tripShareRouter = require('./src/routes/tripShareroute');
 const transportationRoute = require('./src/routes/transportationRoute');
 const reviewRoute = require('./src/routes/reviewRoute');
+const adminRoute = require('./src/routes/adminRoute');
 
 
 require('dotenv').config();
@@ -44,7 +45,7 @@ app.use('/trip', tripRoute);
 app.use('/trip/share', tripShareRouter); 
 app.use('/transportations', transportationRoute);
 app.use('/review', reviewRoute);
-
+app.use('/admin', adminRoute);
 // ✅ 기본 라우트
 app.get('/', (req, res) => {
   res.send('api 서버 실행 중!');
