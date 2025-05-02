@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
-const transportationRoute = require('./src/routes/transportationRoute');
+const transportationRoute = require('./routes/transportationRoute');
 
 require('dotenv').config();
 
@@ -14,12 +14,16 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
+app.use(cors({ origin: 'http://localhost:5173' })); // React 개발 서버 포트
+
 
 const userRoutes = require('./routes/userRoute');
+const recommendationRoutes = require('./routes/recommendationRoutes');
 
 
 // 라우트
 app.use('/user',userRoutes );
+app.use('/trip', recommendationRoutes);
 
 // 에러 핸들링
 
