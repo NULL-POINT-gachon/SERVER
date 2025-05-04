@@ -20,12 +20,15 @@ app.use(cors({ origin: 'http://localhost:5173' })); // React 개발 서버 포�
 const userRoutes = require('./routes/userRoute');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const placeRoutes = require('./routes/placeRoute');
+const tripRoutes = require('./routes/tripRoute');
 
 
 // 라우트
 app.use('/user',userRoutes );
 app.use('/trip', recommendationRoutes);
 app.use('/trip', placeRoutes);
+app.use('/trip', tripRoutes);
+
 
 // 에러 핸들링
 

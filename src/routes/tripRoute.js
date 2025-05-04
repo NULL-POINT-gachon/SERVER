@@ -170,4 +170,66 @@ router.put('/:tripId/transport', authMiddleware.authenticateToken, tripControlle
 router.get('/:tripId/map', authMiddleware.authenticateToken, tripController.getMapMarkers);
 router.post('/:tripId/optimize', authMiddleware.authenticateToken, tripController.optimizeTrip);
 router.put('/:shareId', authMiddleware.authenticateToken, tripSharecontroller.respondToShare);
+
+/**
+ * @swagger
+ * /trip:
+ *   post:
+ *     summary: 여행 일정 생성
+ *     tags: [Trip]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - 여행일정명
+ *               - 출발일자
+ *               - 마무리일자
+ *             properties:
+ *               여행일정명:
+ *                 type: string
+ *                 example: "부산 여름 휴가"
+ *               출발일자:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-07-01"
+ *               마무리일자:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-07-04"
+ *               선택한_여행지_id:
+ *                 type: integer
+ *                 example: 10
+ *                 description: "사용자가 선택한 여행지 ID (옵션)"
+ *     responses:
+ *       200:
+ *         description: 여행 일정 생성 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result_code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "여행 일정이 생성되었습니다."
+ *                 식별자:
+ *                   type: integer
+ *                   example: 10
+ *       400:
+ *         description: 잘못된 요청
+ *       401:
+ *         description: 인증 실패
+ *       500:
+ *         description: 서버 오류
+ */
+// POST /trip 라우트 정의: 인증이 필요한 엔드포인트
+router.post('/', authMiddleware.authenticateToken, tripController.createTrip);
+
 module.exports = router;
