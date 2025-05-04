@@ -137,3 +137,46 @@ exports.createTrip = async (req, res, next) => {
     next(error);
   }
 };
+
+// 전체 여행 일정 조회 컨트롤러 함수
+exports.getAllTrips = async (req, res, next) => {
+  try {
+    // 쿼리 파라미터에서 데이터 추출 및 디코딩 처리
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 10;
+    
+    // URL 인코딩된 '여행상태ex) (계획, 진행중, 완료 , 취소)' 파라미터를 디코딩
+    let travelStatus = null;
+    
+    // 쿼리 파라미터에서 여행 상태 추출 (한글 파라미터 처리)
+    const queryKeys = Object.keys(req.query);
+    queryKeys.forEach(key => {
+      if (key.includes('여행상태')) {
+        travelStatus = req.query[key];
+      }
+    });
+    
+    // JWT 인증 미들웨어에서 설정한 사용자 ID 가져오기
+    const userId = req.user.userId;
+    
+    // 비즈니스 로직 처리를 서비스에 위임
+    const result = await tripservice.getAllTrips(userId, page, limit, travelStatus);
+    
+    // 성공 응답 반환
+    res.status(200).json(result);
+    
+  } catch (error) {
+    console.error('전체 여행 일정 조회 컨트롤러 오류:', error);
+    
+    // 커스텀 에러가 있는 경우 해당 상태 코드로 응답
+    if (error.status) {
+      return res.status(error.status).json({
+        result_code: error.status,
+        message: error.message
+      });
+    }
+    
+    // 예외 처리 미들웨어로 전달
+    next(error);
+  }
+};
