@@ -166,3 +166,54 @@ exports.linkTripWithPlace = async (scheduleId, placeId) => {
     throw error;
   }
 };
+// 전체 여행 일정 개수 조회 함수
+exports.getTotalTripCount = async (userId, travel_status = null) => {
+  let query = 'SELECT COUNT(*) as total_count FROM TravelSchedule WHERE user_id = ?';
+  const queryParams = [userId];
+  
+  // travel_status 필터링 조건 추가
+  if (travel_status) {
+    query += ' AND travel_status = ?';
+    queryParams.push(travel_status);
+  }
+  
+  try {
+    const [rows] = await db.execute(query, queryParams);
+    return rows[0].total_count;
+  } catch (error) {
+    console.error('전체 여행 일정 개수 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+// 전체 여행 일정 조회 함수
+exports.getAllTrips = async (userId, page, limit, travel_status = null) => {
+  const offset = (page - 1) * limit;
+  
+  let query = `
+    SELECT id, schedule_name, departure_date, end_date, 
+           travel_status, created_at, updated_at
+    FROM TravelSchedule 
+    WHERE user_id = ?
+  `;
+  
+  const queryParams = [userId];
+  
+  // travel_status 필터링 조건 추가
+  if (travel_status) {
+    query += ' AND travel_status = ?';
+    queryParams.push(travel_status);
+  }
+  
+  // 정렬 및 페이지네이션 추가
+  query += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
+  
+  try {
+    const [rows] = await db.execute(query, queryParams);
+    return rows;
+  } catch (error) {
+    console.error('전체 여행 일정 조회 중 오류:', error);
+    throw error;
+  }
+};

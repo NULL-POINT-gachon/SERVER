@@ -232,4 +232,74 @@ router.put('/:shareId', authMiddleware.authenticateToken, tripSharecontroller.re
 // POST /trip 라우트 정의: 인증이 필요한 엔드포인트
 router.post('/', authMiddleware.authenticateToken, tripController.createTrip);
 
+
+/**
+ * @swagger
+ * /trip/all:
+ *   get:
+ *     summary: 전체 여행 일정 조회
+ *     tags: [Trip]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: 페이지 번호 (기본값 1)
+ *       - in: query
+ *         name: limit  
+ *         schema:
+ *           type: integer
+ *         description: 페이지당 아이템 수 (기본값 10)
+ *       - in: query
+ *         name: 여행상태ex) (계획, 진행중, 완료 , 취소)
+ *         schema:
+ *           type: string
+ *           enum: [계획, 진행중, 완료, 취소]
+ *         description: 여행 일정 상태 필터
+ *     responses:
+ *       200:
+ *         description: 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result_code:
+ *                   type: integer
+ *                   example: 200
+ *                 total_count:
+ *                   type: integer
+ *                   example: 25
+ *                 trips:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       식별자:
+ *                         type: integer
+ *                       여행일정명:
+ *                         type: string
+ *                       출발일자:
+ *                         type: string
+ *                         format: date
+ *                       마무리일자:
+ *                         type: string
+ *                         format: date
+ *                       여행상태ex) (계획, 진행중, 완료 , 취소):
+ *                         type: string
+ *                       생성일자:
+ *                         type: string
+ *                         format: date-time
+ *       400:
+ *         description: 잘못된 요청
+ *       401:
+ *         description: 인증 실패
+ *       500:
+ *         description: 서버 오류
+ */
+// 기존에 POST / 라우트 이후에 추가하는 부분
+router.get('/all', authMiddleware.authenticateToken, tripController.getAllTrips);
+
 module.exports = router;
