@@ -217,3 +217,42 @@ exports.getAllTrips = async (userId, page, limit, travel_status = null) => {
     throw error;
   }
 };
+
+// 특정 여행 일정 조회 함수
+exports.getTripById = async (userId, tripId) => {
+  const query = `
+    SELECT id, schedule_name, city, departure_date, end_date, 
+           travel_status, created_at, updated_at
+    FROM TravelSchedule 
+    WHERE id = ? AND user_id = ?
+  `;
+  
+  try {
+    const [rows] = await db.execute(query, [tripId, userId]);
+    return rows[0] || null;
+  } catch (error) {
+    console.error('여행 일정 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+// 일정에 포함된 여행지 목록 조회 함수
+exports.getTripDestinations = async (tripId) => {
+  const query = `
+    SELECT sd.id, sd.destination_id, sd.visit_order, sd.visit_duration, 
+           sd.visit_time, sd.visit_date,
+           td.destination_name
+    FROM ScheduleDestination sd
+    JOIN TravelDestination td ON sd.destination_id = td.id
+    WHERE sd.schedule_id = ?
+    ORDER BY sd.visit_date, sd.visit_order
+  `;
+  
+  try {
+    const [rows] = await db.execute(query, [tripId]);
+    return rows;
+  } catch (error) {
+    console.error('여행지 목록 조회 중 오류:', error);
+    throw error;
+  }
+};
