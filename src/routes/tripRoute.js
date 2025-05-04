@@ -302,4 +302,69 @@ router.post('/', authMiddleware.authenticateToken, tripController.createTrip);
 // 기존에 POST / 라우트 이후에 추가하는 부분
 router.get('/all', authMiddleware.authenticateToken, tripController.getAllTrips);
 
+
+/**
+ * @swagger
+ * /trip/{tripId}:
+ *   get:
+ *     summary: 여행 일정 상세 조회
+ *     tags: [Trip]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 여행 일정 ID
+ *     responses:
+ *       200:
+ *         description: 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result_code:
+ *                   type: integer
+ *                 trip:
+ *                   type: object
+ *                   properties:
+ *                     식별자:
+ *                       type: integer
+ *                     여행일정명:
+ *                       type: string
+ *                     도시:
+ *                       type: string
+ *                     출발일자:
+ *                       type: string
+ *                       format: date
+ *                     마무리일자:
+ *                       type: string
+ *                       format: date
+ *                     여행상태:
+ *                       type: string
+ *                     생성일자:
+ *                       type: string
+ *                       format: date-time
+ *                     수정일자:
+ *                       type: string
+ *                       format: date-time
+ *                 core_destinations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 destinations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       404:
+ *         description: 여행 일정을 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
+// 기존 라우터 설정 아래에 추가
+router.get('/:tripId', authMiddleware.authenticateToken, tripController.getTripDetail);
+
 module.exports = router;
