@@ -89,3 +89,80 @@ exports.updateTransportationForTrip = async (tripId, transportationId) => {
   );
   return result;
 };
+
+// 여행 일정 생성 함수
+exports.createTrip = async (userId, tripData) => {
+  const { tripName, departureDate, endDate, travel_status } = tripData;
+  
+  const query = `
+    INSERT INTO TravelSchedule 
+    (user_id, schedule_name, city ,departure_date, end_date, travel_status, created_at, updated_at) 
+    VALUES (?, ?,?, ?, ?, ?, NOW(), NOW())
+  `;
+  
+  try {
+    const [result] = await db.execute(query, [
+      userId,
+      tripName,
+      tripData.city || '', // city 값 추가 (빈 문자열 또는 특정 도시명)
+      departureDate,
+      endDate,
+      travel_status || '계획'
+    ]);
+    
+    return result.insertId;
+  } catch (error) {
+    console.error('여행 일정 생성 중 오류:', error);
+    throw error;
+  }
+};
+
+// 사용자가 이전에 선택한 도시 정보 조회
+exports.getSelectedCityByUserId = async (userId) => {
+  const query = `
+    SELECT ts.city, ts.departure_date, ts.end_date, ts.id 
+    FROM TravelSchedule ts
+    WHERE ts.user_id = ? 
+    ORDER BY ts.created_at DESC
+    LIMIT 1
+  `;
+  
+  try {
+    const [rows] = await db.execute(query, [userId]);
+    return rows[0] || null;
+  } catch (error) {
+    console.error('이전 도시 정보 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+// 여행지 ID로 특정 여행지 정보 조회
+exports.getPlaceById = async (placeId) => {
+  const query = `
+    SELECT * FROM TravelDestination WHERE id = ?
+  `;
+  
+  try {
+    const [rows] = await db.execute(query, [placeId]);
+    return rows[0] || null;
+  } catch (error) {
+    console.error('여행지 정보 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+// 여행 일정과 선택한 여행지를 연결
+exports.linkTripWithPlace = async (scheduleId, placeId) => {
+  const query = `
+    INSERT INTO ScheduleDestination 
+    (destination_id, schedule_id, visit_order, created_at, updated_at) 
+    VALUES (?, ?, 1, NOW(), NOW())
+  `;
+  
+  try {
+    await db.execute(query, [placeId, scheduleId]);
+  } catch (error) {
+    console.error('여행지 연결 중 오류:', error);
+    throw error;
+  }
+};
