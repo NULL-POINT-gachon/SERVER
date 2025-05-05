@@ -2,39 +2,50 @@ const db = require('../config/database'); // 이건 너희 프로젝트에서 DB
 
 // 여행일정 ID로 날짜별 장소 묶어서 가져오기
 exports.getPlacesGroupedByDate = async (tripId) => {
-  //   const [rows] = await db.query(`
-  //     SELECT
-  //       tj.여행지식별자 AS placeId,
-  //       t.여행지명 AS name,
-  //       t.위도 AS latitude,
-  //       t.경도 AS longitude,
-  //       tj.방문날자 AS visitDate
-  //     FROM 여행일정_안에_여행지 tj
-  //     JOIN 여행지 t ON tj.여행지식별자 = t.식별자
-  //     WHERE tj.여행일정식별자 = ?
-  //   `, [tripId]);
+  const [rows] = await db.query(`
+    SELECT
+      tj.destination_id AS 식별자,
+      t.name AS 여행지명,
+      t.latitude AS 위도,
+      t.longitude AS 경도,
+      tj.visit_date AS 방문날자,
+      tj.visit_order AS 방문순서,
+      tj.visit_duration AS 예상방문시간
+    FROM ScheduleDestination tj
+    JOIN TravelDestination t ON tj.destination_id = t.id
+    WHERE tj.schedule_id = ?
+    ORDER BY tj.visit_date, tj.visit_order
+  `, [tripId]);
 
-  //   // 날짜별로 그룹핑
-  //   const grouped = {};
+  // 날짜별로 그룹핑
+  const grouped = {};
 
-  //   for (const row of rows) {
-  //     const date = row.visitDate.toISOString().split('T')[0]; // '2025-06-01' 형식
-  //     if (!grouped[date]) grouped[date] = [];
-  //     grouped[date].push(row);
-  //   }
+  for (const row of rows) {
+    const date = row.방문날자.toISOString().split('T')[0]; // ex: '2025-06-01'
+    if (!grouped[date]) grouped[date] = [];
 
-  //   return grouped;
-  return {
-    "2025-06-01": [
-      { placeId: 1, name: "에펠탑", latitude: 48.8584, longitude: 2.2945 },
-      { placeId: 2, name: "루브르", latitude: 48.8606, longitude: 2.3376 },
-      { placeId: 3, name: "노트르담", latitude: 48.852968, longitude: 2.349902 }
-    ],
-    "2025-06-02": [
-      { placeId: 4, name: "몽마르트", latitude: 48.8867, longitude: 2.3431 },
-      { placeId: 5, name: "개선문", latitude: 48.8738, longitude: 2.2950 }
-    ]
-  };
+    grouped[date].push({
+      식별자: row.식별자,
+      여행지명: row.여행지명,
+      방문순서: row.방문순서,
+      예상방문시간: row.예상방문시간,
+      위도: row.위도,
+      경도: row.경도
+    });
+  }
+
+  return grouped;
+  // return {
+  //   "2025-06-01": [
+  //     { placeId: 1, name: "에펠탑", latitude: 48.8584, longitude: 2.2945 },
+  //     { placeId: 2, name: "루브르", latitude: 48.8606, longitude: 2.3376 },
+  //     { placeId: 3, name: "노트르담", latitude: 48.852968, longitude: 2.349902 }
+  //   ],
+  //   "2025-06-02": [
+  //     { placeId: 4, name: "몽마르트", latitude: 48.8867, longitude: 2.3431 },
+  //     { placeId: 5, name: "개선문", latitude: 48.8738, longitude: 2.2950 }
+  //   ]
+  // };
 };
 exports.updateVisitOrderAndDistance = async ({ tripId, placeId, date, order, distance }) => {
   await db.query(
