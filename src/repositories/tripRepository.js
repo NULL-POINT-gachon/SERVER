@@ -1,4 +1,6 @@
 const db = require('../config/database'); // 이건 너희 프로젝트에서 DB 연결 객체
+console.log('데이터베이스 연결 객체 상태:', db ? '정상' : '실패');
+
 
 // 여행일정 ID로 날짜별 장소 묶어서 가져오기
 exports.getPlacesGroupedByDate = async (tripId) => {
@@ -264,6 +266,55 @@ exports.getTripDestinations = async (tripId) => {
     return rows;
   } catch (error) {
     console.error('여행지 목록 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+exports.updateTripBasicInfo = async (tripId, userId, updateData) => {
+  try {
+    // 직접 하드코딩된 쿼리
+    let query;
+    
+    // 두 필드 모두 있는 경우
+    if (updateData.schedule_name && updateData.travel_status) {
+      query = `
+        UPDATE TravelSchedule 
+        SET schedule_name = '${updateData.schedule_name}',
+            travel_status = '${updateData.travel_status}',
+            updated_at = NOW()
+        WHERE id = ${tripId} AND user_id = ${userId}
+      `;
+      const [result] = await db.query(query); // execute 대신 query 사용
+      return result.affectedRows > 0;
+    }
+    
+    // 일정명만 있는 경우
+    if (updateData.schedule_name) {
+      query = `
+        UPDATE TravelSchedule 
+        SET schedule_name = '${updateData.schedule_name}',
+            updated_at = NOW()
+        WHERE id = ${tripId} AND user_id = ${userId}
+      `;
+      const [result] = await db.query(query);
+      return result.affectedRows > 0;
+    }
+    
+    // 여행상태만 있는 경우
+    if (updateData.travel_status) {
+      query = `
+        UPDATE TravelSchedule 
+        SET travel_status = '${updateData.travel_status}',
+            updated_at = NOW()
+        WHERE id = ${tripId} AND user_id = ${userId}
+      `;
+      const [result] = await db.query(query);
+      return result.affectedRows > 0;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('여행 일정 수정 중 오류:', error);
     throw error;
   }
 };

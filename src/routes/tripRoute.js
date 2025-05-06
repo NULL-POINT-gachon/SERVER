@@ -405,3 +405,60 @@ router.get('/all', authMiddleware.authenticateToken, tripController.getAllTrips)
 router.get('/:tripId', authMiddleware.authenticateToken, tripController.getTripDetail);
 
 module.exports = router;
+
+/**
+ * @swagger
+ * /trip/{tripId}:
+ *   patch:
+ *     summary: 여행 일정 기본 정보 수정 (일정명, 여행상태)
+ *     tags: [Trip]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 여행 일정 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               일정명:
+ *                 type: string
+ *                 example: "수정된 부산 여행"
+ *               여행상태:
+ *                 type: string
+ *                 enum: [계획, 진행중, 완료, 취소]
+ *                 example: "진행중"
+ *     responses:
+ *       200:
+ *         description: 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result_code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "여행 일정이 성공적으로 수정되었습니다"
+ *                 updated_trip_id:
+ *                   type: integer
+ *                   example: 10
+ *       400:
+ *         description: 잘못된 요청
+ *       401:
+ *         description: 인증 실패
+ *       404:
+ *         description: 여행 일정을 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
+router.patch('/:tripId', authMiddleware.authenticateToken, tripController.updateTripBasicInfo);
