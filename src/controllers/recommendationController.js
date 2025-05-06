@@ -4,11 +4,17 @@ const { RecommendationRequestDto } = require('../dtos/recommendationDto');
 
 const getRecommendations = async (req, res, next) => {
   try {
+    /**
+     * start_date: travelData.dateRange[0],   // ISO 문자열이 가장 안전
+              end_date:   travelData.dateRange[1],
+              companions_count: travelData.people,
+              emotion_ids
+     */
     // 요청 본문에서 데이터 추출
-    const { 여행_시작_시간, 여행_종료_시간, 여행동반자수, 감정_ids } = req.body;
+    const { start_date, end_date, companions_count, emotion_ids } = req.body;
     
     // 유효성 검사
-    if (!여행_시작_시간 || !여행_종료_시간 || !여행동반자수 || !감정_ids) {
+    if (!start_date || !end_date || !companions_count || !emotion_ids) {
       return res.status(400).json({
         success: false,
         message: '필수 입력 필드가 누락되었습니다'
@@ -17,11 +23,12 @@ const getRecommendations = async (req, res, next) => {
     
     // DTO 생성
     const requestDto = new RecommendationRequestDto(
-      여행_시작_시간,
-      여행_종료_시간,
-      여행동반자수,
-      감정_ids
+      start_date,
+      end_date,
+      companions_count,
+      emotion_ids
     );
+    console.log(requestDto);
     
     // 사용자 ID 가져오기 (인증 미들웨어에서 설정된 값)
     const userId = req.user.userId;
