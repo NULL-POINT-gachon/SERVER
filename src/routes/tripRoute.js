@@ -7,18 +7,55 @@ const authMiddleware = require('../middlewares/auth');
 /**
  * @swagger
  * /trip/{tripId}/route:
- *   get:
- *     summary: 일정별 최적경로 조회
+ *   post:
+ *     summary: AI 추천 장소 기반 최적경로 계산
+ *     description: AI 서버에서 받은 장소 리스트를 기반으로 최적 경로를 계산합니다.
+ *     tags: [Trip]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: tripId
  *         required: true
  *         schema:
  *           type: integer
- *         description: 조회할 여행 일정 ID
+ *         description: 계산할 여행 일정 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               days:
+ *                 type: array
+ *                 description: 날짜별 장소 리스트
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     day:
+ *                       type: integer
+ *                     items:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           title:
+ *                             type: string
+ *                           time:
+ *                             type: string
+ *                           tags:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                           image:
+ *                             type: string
+ *               transportMode:
+ *                 type: string
+ *                 example: "DRIVING"
  *     responses:
  *       200:
- *         description: 최적 경로를 반환합니다.
+ *         description: 최적화된 경로 데이터 반환
  */
 
 /**
@@ -162,7 +199,7 @@ const authMiddleware = require('../middlewares/auth');
  */
 
 // ✅ API 라우터들
-router.get('/:tripId/route', authMiddleware.authenticateToken, tripController.getOptimizedRoute);
+router.post('/:tripId/route', authMiddleware.authenticateToken, tripController.optimizeRouteFromClientData);
 router.post('/:tripId/route/save', authMiddleware.authenticateToken, tripController.saveOptimizedRoute);
 router.get('/:tripId/distance', authMiddleware.authenticateToken, tripController.getTotalDistanceAndTime);
 router.post('/schedule/:scheduleId/optimize', authMiddleware.authenticateToken, tripController.optimizeSchedule);

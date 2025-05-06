@@ -1,68 +1,80 @@
 const tripRepository = require('../repositories/tripRepository');
-const { calculateDistanceMatrix, solveTSP } = require('../utils/optimizerUtils');
+const { solveTSP } = require('../utils/optimizerUtils');
+const {
+  getCoordinatesByPlaceNames,
+  getRouteDetailsFromOrder
+} = require('../utils/kakaoMapUtils');
+const { getDistanceMatrixFromGoogle } = require('../utils/googleMapUtils'); // ✅ 구글 API
 
-// ✅ 일정별 최적 경로 계산
-exports.getOptimizedRouteByTripId = async (tripId) => {
-  const placesByDate = await tripRepository.getPlacesGroupedByDate(tripId);
+// ✅ 최적 경로 계산 (Google API 사용)
+exports.optimizeRouteFromClientData = async (optimizeRequestDto) => {
   const resultDays = [];
   let totalDistance = 0;
-  let totalTime = 0;
-  let dayCounter = 1;
+  let totalDuration = 0;
 
-  for (const [date, places] of Object.entries(placesByDate)) {
-    if (places.length < 1) continue;
-    let optimizedPlaces = [];
+  for (const day of optimizeRequestDto.days) {
+    const placeTitles = day.items.map(p => p.title);
+    const coordinates = await getCoordinatesByPlaceNames(placeTitles);
 
-    if (places.length === 1) {
-      optimizedPlaces = [{ ...places[0], 방문순서: 1, distanceFromPrevious: 0 }];
-    } else {
-      const distanceMatrix = calculateDistanceMatrix(places);
-      const order = solveTSP(distanceMatrix);
+    // ✅ 카카오 Distance Matrix → 🔁 구글로 변경
+    const { distanceMatrix } = await getDistanceMatrixFromGoogle(coordinates);
 
-      optimizedPlaces = order.map((idx, i) => {
-        const dist = i === 0 ? 0 : distanceMatrix[order[i - 1]][order[i]];
-        totalDistance += dist;
-        totalTime += (dist / 40) * 60;
-        return {
-          ...places[idx],
-          방문순서: i + 1,
-          distanceFromPrevious: dist
-        };
-      });
-    }
+    const order = solveTSP(distanceMatrix);
 
-    const transportList = [];
-    for (let i = 0; i < optimizedPlaces.length - 1; i++) {
-      transportList.push({
-        출발여행지식별자: optimizedPlaces[i].식별자,
-        도착지여행지식별자: optimizedPlaces[i + 1].식별자,
-        id: 2,
-        수단명: "대중교통",
-        예상소요시간: Math.round(optimizedPlaces[i + 1].distanceFromPrevious / 40 * 60)
-      });
-    }
+    const routeDetails = await getRouteDetailsFromOrder(
+      coordinates,
+      order,
+      optimizeRequestDto.transportMode
+    );
+
+    // ✅ 디버깅: 각 day 마다 출력
+    console.log(`🧭 Day ${day.day}`);
+    console.log('📍 Coordinates:', coordinates);
+    console.log('📐 Distance Matrix:', distanceMatrix);
+    console.log('📊 TSP Order:', order);
+    console.log('🚗 Route Details:', routeDetails);
+
+    const orderedItems = order.map((idx, i) => {
+      const original = day.items[idx];
+      const next = routeDetails[i] || {};
+      const coord = coordinates[idx]; // ✅ 좌표 정보 추가
+
+      return {
+        title: original.title,
+        time: original.time,
+        tags: original.tags,
+        image: original.image,
+        order: i + 1,
+        lat: coord.lat,               // ✅ 추가
+        lng: coord.lng,               // ✅ 추가
+        nextPlaceDistance: next.distance ?? null,
+        nextPlaceDuration: next.duration ?? null,
+        nextPlaceTransport: optimizeRequestDto.transportMode
+      };
+    });
+
+    const dayDistance = routeDetails.reduce((acc, cur) => acc + (cur.distance || 0), 0);
+    const dayDuration = routeDetails.reduce((acc, cur) => acc + (cur.duration || 0), 0);
 
     resultDays.push({
-      day: dayCounter++,
-      places: optimizedPlaces.map(p => ({
-        식별자: p.식별자,
-        여행지명: p.여행지명,
-        방문순서: p.방문순서,
-        예상방문시간: p.예상방문시간 ?? 90
-      })),
-      transportation: transportList
+      day: day.day,
+      items: orderedItems,
+      totalDistance: parseFloat(dayDistance.toFixed(2)),
+      totalDuration: Math.round(dayDuration)
     });
+
+    totalDistance += dayDistance;
+    totalDuration += dayDuration;
   }
 
   return {
     days: resultDays,
-    총거리: parseFloat(totalDistance.toFixed(2)),
-    예상소요시간: Math.round(totalTime),
-    생성일자: new Date().toISOString()
+    totalDistance: parseFloat(totalDistance.toFixed(2)),
+    totalDuration: Math.round(totalDuration)
   };
 };
 
-// ✅ 저장
+// ✅ 최적 경로 저장
 exports.saveOptimizedRoute = async (tripId, dataByDate) => {
   for (const [date, places] of Object.entries(dataByDate)) {
     for (const place of places) {
@@ -77,7 +89,7 @@ exports.saveOptimizedRoute = async (tripId, dataByDate) => {
   }
 };
 
-// ✅ 총 이동 거리/시간 계산
+// ✅ 거리/시간 총합 계산
 exports.calculateTotalDistanceAndTime = async (tripId) => {
   const placesByDate = await tripRepository.getPlacesGroupedByDate(tripId);
   let totalDistance = 0;
@@ -101,23 +113,25 @@ exports.calculateTotalDistanceAndTime = async (tripId) => {
   };
 };
 
-// ✅ 최적 경로 저장 호출
+// ✅ 일정 단위 최적화
 exports.optimizeScheduleById = async (scheduleId) => {
   const optimized = await exports.getOptimizedRouteByTripId(scheduleId);
   await tripRepository.updateVisitOrderAndDistanceBulk(scheduleId, optimized.days);
 };
 
-// ✅ 전체 이동수단 변경
+// ✅ 교통수단 변경
 exports.updateTransportation = async (tripId, transportationId) => {
   return await tripRepository.updateTransportationForTrip(tripId, transportationId);
 };
 
-// ✅ 거리 계산 함수
+// 🔧 거리 계산 (위경도 기반 하버사인 공식)
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) ** 2;
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+            Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }

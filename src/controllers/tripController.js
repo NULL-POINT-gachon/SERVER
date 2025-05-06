@@ -4,6 +4,20 @@ const tripservice = require('../services/tripService');
 const { TripCreateDto } = require('../dtos/tripDto');
 
 
+// 🔁 AI 서버 결과 기반 경로 최적화 API
+exports.optimizeRouteFromClientData = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const optimizeRequestDto = req.body; // 수정한 부분
+    const result = await tripService.optimizeRouteFromClientData(optimizeRequestDto); // 수정한 부분
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('AI 장소 기반 최적경로 계산 오류:', error);
+    res.status(500).json({ message: '최적 경로 계산 실패' });
+  }
+};
+
 exports.getOptimizedRoute = async (req, res) => {
   try {
     const { tripId } = req.params;
