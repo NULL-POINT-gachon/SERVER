@@ -102,10 +102,11 @@ exports.optimizeTrip = async (req, res) => {
 exports.createTrip = async (req, res, next) => {
   try {
     // 요청 본문에서 필요한 데이터 추출
-    const { 여행일정명, 출발일자, 마무리일자, 선택한_여행지_id } = req.body;
+    const { 여행일정명, 출발일자, 마무리일자, 선택한_여행지_id, 도시} = req.body;
     
     // JWT 인증 미들웨어에서 설정한 사용자 ID 가져오기
-    const userId = req.user.userId;
+    const userId = req.user.id;
+    console.log(userId);
     
     // 데이터 검증과 타입 변환을 위한 DTO 객체 생성
     const tripDto = new TripCreateDto(
@@ -113,11 +114,13 @@ exports.createTrip = async (req, res, next) => {
       출발일자,
       마무리일자,
       '계획',
-      선택한_여행지_id
+      선택한_여행지_id,
+      도시
     );
     
     // 비즈니스 로직 처리를 서비스에 위임
     const result = await tripservice.createTrip(userId, tripDto);
+    console.log(result);
     
     // 성공 응답 반환
     res.status(200).json(result);
