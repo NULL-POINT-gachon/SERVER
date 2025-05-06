@@ -3,6 +3,7 @@ const tripservice = require('../services/tripService');
 
 const { TripCreateDto } = require('../dtos/tripDto');
 
+
 exports.getOptimizedRoute = async (req, res) => {
   try {
     const { tripId } = req.params;
@@ -198,6 +199,47 @@ exports.getTripDetail = async (req, res, next) => {
     
   } catch (error) {
     console.error('여행 일정 상세 조회 컨트롤러 오류:', error);
+    
+    // 커스텀 에러 처리
+    if (error.status) {
+      return res.status(error.status).json({
+        result_code: error.status,
+        message: error.message
+      });
+    }
+    
+    // 예외 처리 미들웨어로 전달
+    next(error);
+  }
+};
+
+// src/controllers/tripController.js 확인
+
+exports.updateTripBasicInfo = async (req, res, next) => {
+  try {
+    // Path 파라미터에서 tripId 추출
+    const { tripId } = req.params;
+    const userId = req.user.userId;
+
+    // 요청 본문에서 필요한 데이터 추출
+    const { 일정명, 여행상태 } = req.body;
+    
+    // 디버깅 로그 추가
+    console.log('컨트롤러 요청 데이터:', req.body);
+    console.log('asd' , req.user.userId);
+    // JWT 인증 미들웨어에서 설정한 사용자 ID 가져오기
+    
+    // 서비스 함수 호출
+    const result = await tripservice.updateTripBasicInfo(userId, tripId, {
+      일정명,
+      여행상태
+    });
+    
+    // 성공 응답 반환
+    res.status(200).json(result);
+    
+  } catch (error) {
+    console.error('여행 일정 수정 컨트롤러 오류:', error);
     
     // 커스텀 에러 처리
     if (error.status) {
