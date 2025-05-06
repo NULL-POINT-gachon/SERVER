@@ -1,25 +1,37 @@
 const placeRepository = require('../repositories/placeRepository');
 const { PlaceRecommendationDto } = require('../dtos/placePreferenceDto');
+const { FinalPlaceRecommendationDto } = require('../dtos/FinalPlacePreferenceDto');
 const { spawn } = require('child_process');
 const axios = require('axios');
 
 class PlaceService {
 
   callPythonScript(detailArgs) {
+    // ── 배열 아닌 경우를 대비한 보정 ───────────────────
+    const actIds = Array.isArray(detailArgs.activity_ids)
+                     ? detailArgs.activity_ids
+                     : (detailArgs.activity_ids ? [detailArgs.activity_ids] : []);
+  
+    const emoIds = Array.isArray(detailArgs.emotion_ids)
+                     ? detailArgs.emotion_ids
+                     : (detailArgs.emotion_ids ? [detailArgs.emotion_ids] : []);
+  
     return new Promise((resolve, reject) => {
       const scriptPath = '/home/hyeonwch/total/ai/src/recommender/ai_recommendation.py';
-
+  
       const proc = spawn('python', [
         scriptPath,
         '--mode', 'detail',
         '--city', detailArgs.city,
         '--activity_type', detailArgs.activity_type,
-        '--activity_ids', detailArgs.activity_ids.join(','),
-        '--emotion_ids', detailArgs.emotion_ids.join(','),
+        '--activity_ids',  actIds.join(','),
+        '--emotion_ids',   emoIds.join(','),
         '--preferred_transport', detailArgs.preferred_transport || '',
         '--companions_count', String(detailArgs.companions_count || 1),
-        '--activity_level', String(detailArgs.activity_level || 5),
-        '--top_n', String(detailArgs.top_n || 3),
+        '--activity_level',  String(detailArgs.activity_level  || 5),
+        '--place_name',      detailArgs.place_name      || '',
+        '--trip_duration',   String(detailArgs.trip_duration   || 1),
+        '--top_n',           String(detailArgs.top_n           || 3),
         '--alpha', '0.7'
       ]);
 
@@ -48,9 +60,9 @@ class PlaceService {
 
   async getPlaceRecommendations(userId, preferenceDto) {
     try {
+      console.log('preferenceDto:', preferenceDto);
       // AI 서비스 요청 형식으로 변환
       const aiRequestData = preferenceDto.toAIRequestFormat();
-      console.log('AI Request Data:', aiRequestData);
       
       // Python 스크립트 호출
       const aiResponse = await this.callPythonScript(aiRequestData);
@@ -76,6 +88,55 @@ class PlaceService {
       throw new Error('여행지 추천을 가져오는 중 오류가 발생했습니다.');
     }
   }
+
+  async getFinalPlaceRecommendations(userId, tripDto) {
+    try {
+      console.log('tripDto:', tripDto);
+      const aiRequestData = tripDto.toAIRequestFormat();
+      
+      // Python 호출 → Tour API 보강
+      const aiResponse     = await this.callPythonScript(aiRequestData);
+      console.log('AI Response:', aiResponse);
+      const enrichedPlaces = await this.enrichPlacesWithTourAPI(
+        aiResponse,
+        aiRequestData.city
+      );
+  
+      // === 일정(plan) 객체 생성 =======================================
+      const daysCnt   = aiRequestData.trip_duration || 1;
+      const perDay    = Math.ceil(enrichedPlaces.length / daysCnt);
+      const plan      = { days: [] };
+  
+      for (let d = 0; d < daysCnt; d++) {
+        const slice = enrichedPlaces.slice(d * perDay, (d + 1) * perDay);
+  
+        const items = slice.map((p, idx) => ({
+          id:        `${d + 1}-${idx + 1}`,
+          title:     p.place_name || p['여행지명'],
+          description:
+            p.description ||
+            `${p.place_name || p['여행지명']}의 멋진 장소입니다.`,
+          image:     p.image || '/images/default-place.jpg',
+          tags:      this.generatePlaceTags(
+                       p.activity_ids,
+                       p.emotion_ids,
+                       p['분류']
+                     ),
+          region:    aiRequestData.city?.toLowerCase() || 'unknown',
+        }));
+  
+        plan.days.push({ day: d + 1, items });
+      }
+  
+      // DTO로 래핑해서 리턴
+      return new FinalPlaceRecommendationDto(plan);
+  
+    } catch (err) {
+      console.error('여행지 추천 서비스 오류:', err);
+      throw new Error('여행지 추천을 가져오는 중 오류가 발생했습니다.');
+    }
+  }
+  
 
   async enrichPlacesWithTourAPI(places, city) {
     const enrichedPlaces = [];

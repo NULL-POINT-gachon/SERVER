@@ -1,6 +1,7 @@
 // src/controllers/placeController.js
 const placeService = require('../services/placeService');
 const { PlacePreferenceDto } = require('../dtos/placePreferenceDto');
+const { FinalPlacePreferenceDto } = require('../dtos/FinalPlacePreferenceDto');
 
 const getPlaceRecommendations = async (req, res, next) => {
   try {
@@ -52,6 +53,47 @@ const getPlaceRecommendations = async (req, res, next) => {
   }
 };
 
+
+const getFinalPlaceRecommendations = async (req, res, next) => {
+  try {
+    const { city, activity_type, activity_ids, emotion_ids, preferred_transport, companion, activity_level, place_name, trip_duration } = req.body;
+
+    const preferenceDto = new FinalPlacePreferenceDto(
+      city,
+      activity_type,
+      activity_ids,
+      emotion_ids,
+      preferred_transport,
+      companion,
+      activity_level,
+      place_name,
+      trip_duration
+    );
+
+    const userId = req.user.userId;
+
+    const recommendations = await placeService.getFinalPlaceRecommendations(userId, preferenceDto);
+
+    res.status(200).json({
+      success: true,
+      data: recommendations
+    });
+
+  } catch (error) {
+    console.error('여행지 추천 컨트롤러 오류:', error);
+
+    if (error.status) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message
+      });
+    }
+    
+    next(error);
+  }
+}
+
 module.exports = {
-  getPlaceRecommendations
+  getPlaceRecommendations,
+  getFinalPlaceRecommendations
 };
