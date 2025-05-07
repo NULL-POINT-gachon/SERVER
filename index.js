@@ -8,6 +8,7 @@ const tripShareRouter = require('./src/routes/tripShareroute');
 const transportationRoute = require('./src/routes/transportationRoute');
 const reviewRoute = require('./src/routes/reviewRoute');
 const adminRoute = require('./src/routes/adminRoute');
+const morgan = require('morgan');
 
 
 require('dotenv').config();
@@ -18,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
-
+app.use(morgan('dev'));
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',

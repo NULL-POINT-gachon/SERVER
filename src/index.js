@@ -32,7 +32,6 @@ app.use('/trip', tripRoutes);
 
 // 에러 핸들링
 
-
 // Swagger 설정
 const swaggerOptions = {
   definition: {
