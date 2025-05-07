@@ -1,7 +1,12 @@
 const userService = require('../services/userService');
-const googleClient = require('../middlewares/auth');
 const userDto = require('../dtos/userDto');
 const jwt = require('jsonwebtoken');
+const { googleClient } = require('../middlewares/auth');  // 구조 분해 할당 사용
+const { google } = require('googleapis');  // googleapis 패키지 추가
+
+console.log('Controller: Google Client Type:', typeof googleClient);
+console.log('Controller: Google Client Methods:', Object.keys(googleClient).join(', '));
+console.log('Controller: generateAuthUrl exists:', typeof googleClient.generateAuthUrl === 'function');
 
 const signup = async (req, res, next) => {
   try {
@@ -33,47 +38,84 @@ const signup = async (req, res, next) => {
 };
 // Google 로그인 페이지로 리다이렉트
 const googleLogin = (req, res) => {
-  const authUrl = googleClient.generateAuthUrl({
-    access_type: 'offline',
-    scope: ['profile', 'email']
-  });
-  res.redirect(authUrl);
-};
+  try {
+    console.log('Google 로그인 시작');
+    
+    const scopes = [
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email'
+    ];
 
+      // generateAuthUrl 호출 전 추가 디버깅
+      console.log('GoogleClient 함수 확인:', {
+        generateAuthUrl: typeof googleClient.generateAuthUrl
+      });
+  
+      // 인증 URL 생성
+      const authUrl = googleClient.generateAuthUrl({
+        access_type: 'offline',
+        scope: scopes,
+        include_granted_scopes: true
+      });
+      
+      console.log('생성된 authUrl:', authUrl);
+      res.redirect(authUrl);
+    } catch (error) {
+      console.error('Google 로그인 오류:', error);
+      res.redirect('/login?error=google_login_failed');
+    }
+  };
+  
 // Google 콜백 처리
 const googleCallback = async (req, res) => {
   try {
     const { code } = req.query;
-    const { tokens } = await googleClient.getToken(code);
-    const ticket = await googleClient.verifyIdToken({
-      idToken: tokens.id_token,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
+    console.log('Google 콜백 코드 수신:', code ? '있음' : '없음');
     
-    const payload = ticket.getPayload();
-    const { email, name } = payload;
+    // 코드로 토큰 교환
+    const { tokens } = await googleClient.getToken(code);
+    googleClient.setCredentials(tokens);
+    
+    // userinfo API를 사용하여 사용자 정보 가져오기
+    const oauth2 = google.oauth2('v2');
+    const userInfo = await oauth2.userinfo.get({ auth: googleClient });
+    
+    const { email, name, picture } = userInfo.data;
+    console.log('Google 사용자 정보:', { email, name: name || 'Not provided' });
     
     // 이메일로 사용자 확인
     let user = await userService.findUserByEmail(email);
     
     if (!user) {
       // 임시 사용자 생성
-      user = await userService.createGoogleUser({ email, name });
+      user = await userService.createGoogleUser({ email, name, picture });
       
       // 프로필 완성을 위한 임시 토큰 생성
-      const tempToken = userService.generateToken(user.id, { needsCompletion: true });
+      const tempToken = jwt.sign(
+        { userId: user.id, needsCompletion: true },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
       
-      return res.redirect(`/complete-profile?token=${tempToken}`);
+      // 프론트엔드의 프로필 완성 페이지로 리다이렉트
+      const clientUrl = process.env.CLIENT_URL || 'http://localhost:3001';
+      return res.redirect(`${clientUrl}/complete-profile?token=${tempToken}`);
     }
     
     // 정상 토큰 발급
-    const token = userService.generateToken(user.id);
-
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
     
-    res.redirect(`/?token=${token}`);
+    // 프론트엔드 메인 페이지로 리다이렉트
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    res.redirect(`${clientUrl}?token=${token}`);
   } catch (error) {
     console.error('Google 인증 오류:', error);
-    res.redirect('/login?error=google_auth_failed');
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    res.redirect(`${clientUrl}/login?error=google_auth_failed`);
   }
 };
 
