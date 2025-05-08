@@ -5,7 +5,19 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URL = process.env.GOOGLE_REDIRECT_URL || 'http://localhost:3000/user/google/callback';
 
-const client = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URL);
+console.log('Google OAuth Config:', {
+  clientId: GOOGLE_CLIENT_ID ? 'Set' : 'Not set',
+  clientSecret: GOOGLE_CLIENT_SECRET ? 'Set' : 'Not set',
+  redirectUrl: REDIRECT_URL
+});
+
+
+
+const googleClient = new OAuth2Client(
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  REDIRECT_URL
+);
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
@@ -38,4 +50,7 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-module.exports = { client, authenticateToken };
+
+
+
+module.exports = {  authenticateToken ,googleClient };
