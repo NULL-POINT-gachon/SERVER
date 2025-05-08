@@ -24,6 +24,11 @@ exports.getUserById = async (userId) => {
 
 // 사용자 상태 변경
 exports.updateUserStatus = async (userId, status) => {
+  const user = await adminRepository.findUserById(userId);
+  if (!user) {
+    throw new Error('사용자를 찾을 수 없습니다');
+  }
+  
   const success = await adminRepository.updateUserStatus(userId, status);
   return { userId, updatedStatus: status, success };
 

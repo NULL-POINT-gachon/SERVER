@@ -291,4 +291,6 @@ router.patch('/profile', authMiddleware.authenticateToken, userController.update
 //사용자 회원탈퇴 
 router.patch('/deactivate', authMiddleware.authenticateToken, userController.deactivateUser);
 
+
+
 module.exports = router;

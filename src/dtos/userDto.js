@@ -6,6 +6,7 @@ const toResponse = (user) => {
       age: user.age,
       gender: user.gender,
       residence: user.residence,
+      role: user.role ,
       created_at: user.created_at
     };
   };

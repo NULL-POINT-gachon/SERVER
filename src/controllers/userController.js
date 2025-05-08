@@ -168,7 +168,8 @@ const login = async (req, res, next) => {
       message: '로그인 성공',
       data: {
         user: userDto.toResponse(user),
-        token
+        token,
+        isAdmin: user.role === 'admin'
       }
     });
   } catch (error) {
@@ -231,6 +232,8 @@ const deactivateUser = async (req, res, next) => {
     next(error);
   }
 };
+
+
 
 module.exports = {
   signup ,

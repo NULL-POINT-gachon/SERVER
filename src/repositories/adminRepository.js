@@ -19,49 +19,28 @@ const mockUsers = [
   },
 ];
 
-// 💡 실제 DB 조회
 exports.findAllUsers = async () => {
-  // [Mock 테스트용]
-//   console.log('[Mock] 전체 사용자 조회');
-//   return mockUsers;
-
-  // [실제 DB 연동용]
   const [rows] = await db.query(`
-    SELECT 식별자 AS id, 이름 AS name, 이메일 AS email, 나이 AS age, 성별 AS gender, 상태 AS status 
-    FROM 사용자
+    SELECT id, name, email, age, gender, residence, status, role
+    FROM User
   `);
   return rows;
 };
 
 exports.findUserById = async (userId) => {
-  // [Mock 테스트용]
-//   console.log('[Mock] 사용자 상세 조회:', userId);
-//   return mockUsers.find(user => user.id === Number(userId));
-
-  // [실제 DB 연동용]
   const [rows] = await db.query(`
-    SELECT 식별자 AS id, 이름 AS name, 이메일 AS email, 나이 AS age, 성별 AS gender, 상태 AS status 
-    FROM 사용자
-    WHERE 식별자 = ?
+    SELECT id, name, email, age, gender, residence, status, role
+    FROM User
+    WHERE id = ?
   `, [userId]);
   return rows[0];
 };
 
 exports.updateUserStatus = async (userId, status) => {
-  // [Mock 테스트용]
-//   console.log('[Mock] 사용자 상태 변경:', userId, status);
-//   const user = mockUsers.find(u => u.id === Number(userId));
-//   if (user) {
-//     user.status = status;
-//     return true;
-//   }
-//   return false;
-
-  // [실제 DB 연동용]
   const [result] = await db.query(`
-    UPDATE 사용자 
-    SET 상태 = ?
-    WHERE 식별자 = ?
+    UPDATE User 
+    SET status = ?
+    WHERE id = ?
   `, [status, userId]);
   return result.affectedRows === 1;
 };
