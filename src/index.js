@@ -23,6 +23,7 @@ const placeRoutes = require('./routes/placeRoute');
 const tripRoutes = require('./routes/tripRoute');
 const adminDestinationRoutes = require('./routes/adminDestinationRoute');
 const adminReviewRoutes = require('./routes/adminReviewRoute');
+const notificationRoutes = require('./routes/notificationRoute');
 
 
 // 라우트
@@ -32,6 +33,7 @@ app.use('/trip', placeRoutes);
 app.use('/trip', tripRoutes);
 app.use('/admin', adminDestinationRoutes);
 app.use('/admin', adminReviewRoutes);
+app.use('/notifications', notificationRoutes);
 
 
 // 에러 핸들링

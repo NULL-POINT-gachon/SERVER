@@ -1,7 +1,17 @@
 const repo = require('../repositories/tripSharerepository');
+const notificationService = require('../services/notificationService');
 
 exports.createShare = async (data) => {
-  return await repo.insertShare(data);
+  const share = await repo.insertShare(data);
+  
+  // 일정 공유 초대 알림 생성
+  await notificationService.createInviteNotification(
+    data.sharing_user_id, 
+    data.receiver_user_id, 
+    data.schedule_id
+  );
+  
+  return share;
 };
 
 exports.updateShareStatus = async (shareId, action) => {
