@@ -12,7 +12,7 @@ const authMiddleware = require('../middlewares/auth');
  *       200:
  *         description: 모든 사용자 정보를 반환합니다.
  */
-router.get('/users', authMiddleware.authenticateToken, controller.getAllUsers);
+router.get('/users', authMiddleware.authenticateToken, authMiddleware.requireAdmin, controller.getAllUsers);
 
 /**
  * @swagger
@@ -29,7 +29,7 @@ router.get('/users', authMiddleware.authenticateToken, controller.getAllUsers);
  *       200:
  *         description: 사용자 정보 반환
  */
-router.get('/users/:userId', authMiddleware.authenticateToken, controller.getUserById);
+router.get('/users/:userId', authMiddleware.authenticateToken, authMiddleware.requireAdmin, controller.getUserById);
 
 /**
  * @swagger
@@ -56,6 +56,6 @@ router.get('/users/:userId', authMiddleware.authenticateToken, controller.getUse
  *       200:
  *         description: 상태 변경 결과
  */
-router.patch('/users/:userId/status', authMiddleware.authenticateToken, controller.updateUserStatus);
+router.patch('/users/:userId/status', authMiddleware.authenticateToken, authMiddleware.requireAdmin, controller.updateUserStatus);
 
 module.exports = router;

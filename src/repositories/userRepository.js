@@ -71,9 +71,35 @@ const updateUser = async (userId, userData) => {
   }
 };
 
+const findAdmins = async () => {
+  const query = `SELECT * FROM User WHERE role = 'admin'`;
+  
+  try {
+    const [rows] = await db.execute(query);
+    return rows;
+  } catch (error) {
+    console.error('관리자 검색 중 오류:', error);
+    throw error;
+  }
+};
+
+const updateUserRole = async (userId, role) => {
+  const query = `UPDATE User SET role = ?, updated_at = NOW() WHERE id = ?`;
+  
+  try {
+    const [result] = await db.execute(query, [role, userId]);
+    return result.affectedRows > 0;
+  } catch (error) {
+    console.error('사용자 역할 변경 중 오류:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   findUserByEmail,
   findUserById,
   createUser , 
-  updateUser
+  updateUser ,
+  findAdmins ,
+  updateUserRole
 };

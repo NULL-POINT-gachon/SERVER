@@ -84,7 +84,8 @@ const loginUser = async (email, password) => {
     throw { status: 401, message: '이메일 또는 비밀번호가 일치하지 않습니다' };
   }
   
-  const token = generateToken(user.id);
+  // const token = generateToken(user.id); 
+  const token = generateToken(user.id, { role: user.role });
   
   return { user, token };
 
@@ -105,6 +106,25 @@ const deactivateUser = async (userId) => {
   return await userRepository.updateUser(userId, { status: 0 });
 };
 
+const getAdmins = async () => {
+  const admins = await userRepository.findAdmins();
+  return admins.map(admin => userDto.toResponse(admin));
+};
+
+const updateUserRole = async (userId, role) => {
+  if (role !== 'user' && role !== 'admin') {
+    throw { status: 400, message: '유효하지 않은 역할입니다.' };
+  }
+  
+  const success = await userRepository.updateUserRole(userId, role);
+  if (!success) {
+    throw { status: 404, message: '사용자를 찾을 수 없습니다.' };
+  }
+  
+  return await getUserById(userId);
+};
+
+
 module.exports = {
   registerUser ,
   createGoogleUser,
@@ -113,5 +133,7 @@ module.exports = {
   loginUser ,
   generateToken ,
   getUserById ,
-  deactivateUser
+  deactivateUser ,
+  getAdmins , 
+  updateUserRole
 };
