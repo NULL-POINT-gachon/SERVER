@@ -318,3 +318,52 @@ exports.updateTripBasicInfo = async (tripId, userId, updateData) => {
     throw error;
   }
 };
+
+exports.cloneScheduleForUser = async (originalScheduleId, targetUserId) => {
+  // 1. 기존 일정 정보 조회
+  const [rows] = await db.query(`
+    SELECT schedule_name, city, departure_date, end_date
+    FROM TravelSchedule
+    WHERE id = ?
+  `, [originalScheduleId]);
+  const origin = rows[0];
+  if (!origin) throw new Error('복제할 일정이 존재하지 않습니다.');
+
+  // 2. 새로운 일정 생성
+  const [result] = await db.query(`
+    INSERT INTO TravelSchedule
+    (user_id, schedule_name, city, departure_date, end_date, travel_status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, 'shared', NOW(), NOW())
+  `, [
+    targetUserId,
+    origin.schedule_name + " (공유됨)",
+    origin.city,
+    origin.departure_date,
+    origin.end_date
+  ]);
+  const newScheduleId = result.insertId;
+
+  // 3. 장소 목록 복사
+  const [destinations] = await db.query(`
+    SELECT destination_id, visit_order, visit_duration, visit_time, visit_date
+    FROM ScheduleDestination
+    WHERE schedule_id = ?
+  `, [originalScheduleId]);
+
+  for (const d of destinations) {
+    await db.query(`
+      INSERT INTO ScheduleDestination 
+      (destination_id, schedule_id, visit_order, visit_duration, visit_time, visit_date, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+    `, [
+      d.destination_id,
+      newScheduleId,
+      d.visit_order,
+      d.visit_duration,
+      d.visit_time,
+      d.visit_date
+    ]);
+  }
+
+  return newScheduleId;
+};

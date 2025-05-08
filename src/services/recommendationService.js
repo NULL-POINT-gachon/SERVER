@@ -9,7 +9,7 @@ class RecommendationService {
   async callPythonScript(requestData) {
     return new Promise((resolve, reject) => {
       // Python 스크립트 경로 설정
-      const pythonScriptPath = '/home/hyeonwch/total/ai/src/recommender/ai_recommendation.py';
+      const pythonScriptPath = '/Users/chaejinseong/graduation-project/ai/src/recommender/ai_recommendation.py';
 
       // conda activate total
       // const pythonExecutable = '/home/hyeonwch/miniconda3/envs/ai_tavel_rec/bin/python';

@@ -17,7 +17,7 @@ class PlaceService {
                      : (detailArgs.emotion_ids ? [detailArgs.emotion_ids] : []);
   
     return new Promise((resolve, reject) => {
-      const scriptPath = '/home/hyeonwch/total/ai/src/recommender/ai_recommendation.py';
+      const scriptPath = '/Users/chaejinseong/graduation-project/ai/src/recommender/ai_recommendation.py';
   
       const proc = spawn('python', [
         scriptPath,

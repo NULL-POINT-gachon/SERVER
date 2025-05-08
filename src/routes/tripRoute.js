@@ -206,7 +206,7 @@ router.post('/schedule/:scheduleId/optimize', authMiddleware.authenticateToken, 
 router.put('/:tripId/transport', authMiddleware.authenticateToken, tripController.updateTransportation);
 router.get('/:tripId/map', authMiddleware.authenticateToken, tripController.getMapMarkers);
 router.post('/:tripId/optimize', authMiddleware.authenticateToken, tripController.optimizeTrip);
-router.put('/:shareId', authMiddleware.authenticateToken, tripSharecontroller.respondToShare);
+// router.put('/:shareId', authMiddleware.authenticateToken, tripSharecontroller.respondToShare);
 
 /**
  * @swagger
