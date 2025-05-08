@@ -60,5 +60,5 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { client, authenticateToken ,requireAdmin };
+module.exports = { googleClient, authenticateToken ,requireAdmin };
 

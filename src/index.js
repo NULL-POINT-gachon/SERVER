@@ -21,6 +21,7 @@ const userRoutes = require('./routes/userRoute');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const placeRoutes = require('./routes/placeRoute');
 const tripRoutes = require('./routes/tripRoute');
+const adminDestinationRoutes = require('./routes/adminDestinationRoute');
 
 
 // 라우트
@@ -28,6 +29,7 @@ app.use('/user',userRoutes );
 app.use('/trip', recommendationRoutes);
 app.use('/trip', placeRoutes);
 app.use('/trip', tripRoutes);
+app.use('/admin', adminDestinationRoutes);
 
 
 // 에러 핸들링
