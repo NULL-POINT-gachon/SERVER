@@ -36,8 +36,9 @@ app.use('/review', reviewRoute);
 app.use('/admin', adminRoute);
 app.use('/admin', adminDestinationRoute);
 app.use('/admin', adminReviewRoute);
-app.use('/places', placeRoutes);
-app.use('/recommendations', recommendationRoutes);
+app.use('/trip', recommendationRoutes);        // → /trip/recommendation/city
+app.use('/trip', placeRoutes);
+
 
 // ✅ Swagger 설정
 const swaggerOptions = {
