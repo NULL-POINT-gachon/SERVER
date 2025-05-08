@@ -69,4 +69,30 @@ router.get('/destinations', authenticateToken, requireAdmin, adminDestinationCon
  */
 router.get('/destinations/:destinationId', authenticateToken, requireAdmin, adminDestinationController.getDestinationById);
 
+/**
+ * @swagger
+ * /admin/destinations/{destinationId}:
+ *   delete:
+ *     summary: 여행지 삭제
+ *     tags: [AdminDestinations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: destinationId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 여행지 삭제 성공
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 권한 없음
+ *       404:
+ *         description: 여행지를 찾을 수 없음
+ */
+router.delete('/destinations/:destinationId', authenticateToken, requireAdmin, adminDestinationController.deleteDestination);
+
 module.exports = router;

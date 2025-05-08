@@ -20,10 +20,10 @@ exports.updateUserStatus = async (req, res) => {
     const { status } = req.body;
     
     // 상태값 검증
-    if (status !== 0 && status !== 1) {
+    if (status !== 0 && status !== 1 && status !== 2) {
       return res.status(400).json({ 
         success: false, 
-        message: '유효하지 않은 상태값입니다. 0 또는 1이어야 합니다.' 
+        message: '유효하지 않은 상태값입니다. 0, 1 또는 2이어야 합니다.' 
       });
     }
     

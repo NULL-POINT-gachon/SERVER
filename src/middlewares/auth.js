@@ -1,5 +1,6 @@
 const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
+const userRepository = require('../repositories/userRepository'); // userRepository가 필요하다면 불러옴
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -11,13 +12,7 @@ console.log('Google OAuth Config:', {
   redirectUrl: REDIRECT_URL
 });
 
-
-
-const googleClient = new OAuth2Client(
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  REDIRECT_URL
-);
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URL);
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
@@ -25,7 +20,6 @@ const authenticateToken = (req, res, next) => {
   if (authHeader) {
     token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
   }
-
 
   console.log('Auth Header:', authHeader);
   console.log('Token:', token);
@@ -60,5 +54,17 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { googleClient, authenticateToken ,requireAdmin };
+// 관리자 인증 미들웨어
+const authenticateAdmin = (req, res, next) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: '관리자 권한이 필요합니다.' });
+    }
+    next(); // 관리자 인증 완료 후 다음 미들웨어로 진행
+  } catch (error) {
+    console.error('관리자 인증 오류:', error);
+    return res.status(500).json({ success: false, message: '서버 오류' });
+  }
+};
 
+module.exports = { googleClient, authenticateToken, requireAdmin, authenticateAdmin };

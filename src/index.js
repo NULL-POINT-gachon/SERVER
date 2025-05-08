@@ -22,6 +22,8 @@ const tripShareRouter = require('./routes/tripShareroute');
 const transportationRoute = require('./routes/transportationRoute');
 const reviewRoute = require('./routes/reviewRoute');
 const adminRoute = require('./routes/adminRoute');
+const adminDestinationRoute = require('./routes/adminDestinationRoute');
+const adminReviewRoute = require('./routes/adminReviewRoute');
 const placeRoutes = require('./routes/placeRoute');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 
@@ -29,11 +31,13 @@ const recommendationRoutes = require('./routes/recommendationRoutes');
 app.use('/user', userRoute);
 app.use('/trip', tripRoute);
 app.use('/trip/share', tripShareRouter);
-app.use('/trip', recommendationRoutes);
-app.use('/trip', placeRoutes);
+app.use('/transportations', transportationRoute);
 app.use('/review', reviewRoute);
 app.use('/admin', adminRoute);
-app.use('/transportations', transportationRoute);
+app.use('/admin', adminDestinationRoute);
+app.use('/admin', adminReviewRoute);
+app.use('/places', placeRoutes);
+app.use('/recommendations', recommendationRoutes);
 
 // ✅ Swagger 설정
 const swaggerOptions = {
