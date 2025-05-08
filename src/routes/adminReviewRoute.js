@@ -96,7 +96,7 @@ router.get('/reviews/:reviewId', authenticateToken, requireAdmin, adminReviewCon
  *             properties:
  *               status:
  *                 type: integer
- *                 description: 변경할 상태 (0: 비활성화, 1: 활성화)
+ *                 description: "변경할 상태 (0: 비활성화, 1: 활성화)"
  *                 enum: [0, 1]
  *     responses:
  *       200:
