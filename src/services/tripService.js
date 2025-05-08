@@ -165,6 +165,7 @@ exports.getTripDetail = async (userId, tripId) => {
 
 
   exports.updateTripBasicInfo = async (userId, tripId, updateData) => {
+    console.log("updateTripBasicInfo ▶", { userId, tripId, updateData });
     try {
       // 단순화된 로직
       const tripIdNum = parseInt(tripId);

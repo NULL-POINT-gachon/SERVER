@@ -6,13 +6,14 @@ const { FinalPlacePreferenceDto } = require('../dtos/FinalPlacePreferenceDto');
 const getPlaceRecommendations = async (req, res, next) => {
   try {
     // 요청 본문에서 데이터 추출
-    const { city, activity_type, activity_ids, emotion_ids, preffer_transport, companion, activity_level } = req.body;
+    const { city, activity_type, activity_ids, emotion_ids, preferred_transport, companion, activity_level } = req.body;
     
     // 유효성 검사
-    if (!city || !activity_type || !activity_ids || !emotion_ids || !preffer_transport || !companion) {
+    if (!city || !activity_type || !activity_ids || !emotion_ids || !preferred_transport || !companion) {
+      console.log(req.body);
       return res.status(400).json({
         success: false,
-        message: '필수 입력 필드가 누락되었습니다'
+        message: "필수 입력 필드가 누락되었습니다"
       });
     }
     
@@ -22,7 +23,7 @@ const getPlaceRecommendations = async (req, res, next) => {
       activity_type,
       activity_ids,
       emotion_ids,
-      preffer_transport, // 오타 주의: API에서는 preffer_transport로 받고, AI로 보낼때 preferred_transport로 변환
+      preferred_transport, // 오타 주의: API에서는 preffer_transport로 받고, AI로 보낼때 preferred_transport로 변환
       companion,
       activity_level
     );
@@ -56,7 +57,14 @@ const getPlaceRecommendations = async (req, res, next) => {
 
 const getFinalPlaceRecommendations = async (req, res, next) => {
   try {
-    const { city, activity_type, activity_ids, emotion_ids, preferred_transport, companion, activity_level, place_name, trip_duration } = req.body;
+    const { city, activity_type, activity_ids, emotion_ids, preferred_transport, companion, activity_level, place_name, trip_duration, trip_id } = req.body;
+
+    if (!city || !activity_type || !activity_ids || !emotion_ids || !preferred_transport || !companion || !place_name || !trip_duration || !trip_id) {
+      return res.status(400).json({
+        success: false,
+        message: "필수 입력 필드가 누락되었습니다"
+      });
+    }
 
     const preferenceDto = new FinalPlacePreferenceDto(
       city,
@@ -72,7 +80,7 @@ const getFinalPlaceRecommendations = async (req, res, next) => {
 
     const userId = req.user.userId;
 
-    const recommendations = await placeService.getFinalPlaceRecommendations(userId, preferenceDto);
+    const recommendations = await placeService.getFinalPlaceRecommendations(userId, preferenceDto, trip_id);
 
     res.status(200).json({
       success: true,

@@ -35,12 +35,13 @@ const getRecommendations = async (req, res, next) => {
     
     // 서비스 호출
     const recommendations = await recommendationService.getRecommendations(userId, requestDto);
-    
+    console.log("recommendations", recommendations);
     // 응답
     res.status(200).json({
       success: true,
       data: {
         user_id: recommendations.userId,
+        trip_id: recommendations.tripId,
         recommendations: recommendations.recommendations
       }
     });

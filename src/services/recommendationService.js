@@ -9,7 +9,7 @@ class RecommendationService {
   async callPythonScript(requestData) {
     return new Promise((resolve, reject) => {
       // Python 스크립트 경로 설정
-      const pythonScriptPath = '/Users/chaejinseong/graduation-project/ai/src/recommender/ai_recommendation.py';
+      const pythonScriptPath = '/home/hyeonwch/total/ai/src/recommender/ai_recommendation.py';
 
       // conda activate total
       // const pythonExecutable = '/home/hyeonwch/miniconda3/envs/ai_tavel_rec/bin/python';
@@ -84,14 +84,18 @@ class RecommendationService {
       const enrichedRecommendations = await this.enrichRecommendationsWithTourAPI(recommendations);
       
       // 추천 결과 저장
-      // await recommendationRepository.saveRecommendation(
-      //   userId,
-      //   requestDto.startDate,
-      //   requestDto.endDate,
-      //   requestDto.companionsCount,
-      //   requestDto.emotionIds,
-      //   enrichedRecommendations
-      // );
+      const depDate = requestDto.startDate.split('T')[0];
+      const endDate = requestDto.endDate.split('T')[0];
+
+      const { scheduleId } = await recommendationRepository.saveRecommendation(
+        userId,
+        depDate,
+        endDate,
+        requestDto.companionsCount,
+        requestDto.emotionIds,
+        enrichedRecommendations
+      );
+      const tripId = scheduleId;
       
       // 프론트엔드가 원하는 형태로 변환
       const formattedRecommendations = enrichedRecommendations.map(recommendation => ({
@@ -106,6 +110,7 @@ class RecommendationService {
       // userId와 함께 반환
       return {
         userId: userId,
+        tripId: tripId,
         recommendations: formattedRecommendations
       };
       

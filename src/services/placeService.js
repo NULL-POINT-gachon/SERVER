@@ -17,7 +17,7 @@ class PlaceService {
                      : (detailArgs.emotion_ids ? [detailArgs.emotion_ids] : []);
   
     return new Promise((resolve, reject) => {
-      const scriptPath = '/Users/chaejinseong/graduation-project/ai/src/recommender/ai_recommendation.py';
+      const scriptPath = '/home/hyeonwch/total/ai/src/recommender/ai_recommendation.py';
   
       const proc = spawn('python', [
         scriptPath,
@@ -127,6 +127,22 @@ class PlaceService {
   
         plan.days.push({ day: d + 1, items });
       }
+
+      const flatPlaces = [];
+        plan.days.forEach(day => {
+          day.items.forEach((item, idx) => {
+            flatPlaces.push({
+              title:       item.title,
+              description: item.description,
+              image:       item.image,
+              category:    item.tags[0],   // 태그 배열 중 의미 있는 걸 골라서 저장
+              order:       idx + 1
+            });
+          });
+        });
+        await placeRepository.saveRecommendations(userId, tripId, flatPlaces);
+
+  return new FinalPlaceRecommendationDto(plan);
   
       // DTO로 래핑해서 리턴
       return new FinalPlaceRecommendationDto(plan);

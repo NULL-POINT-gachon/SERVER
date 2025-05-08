@@ -2,6 +2,46 @@
 const db = require('../config/database');
 
 class PlaceRepository {
+  async saveRecommendations(userId, tripId, places) {
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      for (const place of places) {
+        // 1) TravelDestination에 장소 저장
+        const [destRes] = await conn.execute(
+          `INSERT INTO TravelDestination
+            (destination_name, destination_description, latitude, longitude, category, image)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            place.title,
+            place.description,
+            place.latitude  || 0,
+            place.longitude || 0,
+            place.category  || null,
+            place.image
+          ]
+        );
+        const destinationId = destRes.insertId;
+
+        // 2) ScheduleDestination에 일정-장소 연결
+        await conn.execute(
+          `INSERT INTO ScheduleDestination
+            (destination_id, schedule_id, visit_order)
+           VALUES (?, ?, ?)`,
+          [ destinationId, tripId, place.order || 1 ]
+        );
+      }
+
+      await conn.commit();
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  }
+
   async savePlacePreferences(userId, preferenceData) {
     try {
       // 기존 TravelSchedule 확인 (도시 기반)
