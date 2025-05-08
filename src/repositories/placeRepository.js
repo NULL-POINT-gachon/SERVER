@@ -8,28 +8,35 @@ class PlaceRepository {
       await conn.beginTransaction();
 
       for (const place of places) {
-        // 1) TravelDestination에 장소 저장
+        /* 1) TravelDestination 저장 */
         const [destRes] = await conn.execute(
           `INSERT INTO TravelDestination
-            (destination_name, destination_description, latitude, longitude, category, image)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+             (destination_name, destination_description,
+              latitude, longitude, category, image, visit_date)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [
-            place.title,
-            place.description,
-            place.latitude  || 0,
-            place.longitude || 0,
-            place.category  || null,
-            place.image
+           place.title        ?? null,
+           place.description  ?? null,
+           (place.latitude  ?? 0),
+           (place.longitude ?? 0),
+           (place.category  ?? null),
+           (place.image     ?? null),
+           (place.visit_date ?? null)
           ]
         );
         const destinationId = destRes.insertId;
 
-        // 2) ScheduleDestination에 일정-장소 연결
+        /* 2) ScheduleDestination 연결 */
         await conn.execute(
           `INSERT INTO ScheduleDestination
-            (destination_id, schedule_id, visit_order)
-           VALUES (?, ?, ?)`,
-          [ destinationId, tripId, place.order || 1 ]
+              (destination_id, schedule_id, visit_order, visit_date, is_selected)
+              VALUES (?, ?, ?, ?, 1)`,
+          [
+            destinationId,
+            tripId,
+           (place.order ?? 1),
+           (place.visit_date ?? null)
+          ]
         );
       }
 

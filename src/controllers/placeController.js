@@ -57,9 +57,9 @@ const getPlaceRecommendations = async (req, res, next) => {
 
 const getFinalPlaceRecommendations = async (req, res, next) => {
   try {
-    const { city, activity_type, activity_ids, emotion_ids, preferred_transport, companion, activity_level, place_name, trip_duration, trip_id } = req.body;
+    const { city, activity_type, activity_ids, emotion_ids, preferred_transport, companion, activity_level, place_name, trip_duration, trip_id, visit_date, departure_date } = req.body;
 
-    if (!city || !activity_type || !activity_ids || !emotion_ids || !preferred_transport || !companion || !place_name || !trip_duration || !trip_id) {
+    if (!city || !activity_type || !activity_ids || !emotion_ids || !preferred_transport || !companion || !place_name || !trip_duration || !trip_id || !visit_date || !departure_date) {
       return res.status(400).json({
         success: false,
         message: "필수 입력 필드가 누락되었습니다"
@@ -75,9 +75,12 @@ const getFinalPlaceRecommendations = async (req, res, next) => {
       companion,
       activity_level,
       place_name,
-      trip_duration
+      trip_duration,
+      visit_date,
+      departure_date
     );
 
+    console.log("trip_id", trip_id);
     const userId = req.user.userId;
 
     const recommendations = await placeService.getFinalPlaceRecommendations(userId, preferenceDto, trip_id);

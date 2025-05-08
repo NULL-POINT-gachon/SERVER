@@ -6,49 +6,44 @@ console.log('데이터베이스 연결 객체 상태:', db ? '정상' : '실패'
 exports.getPlacesGroupedByDate = async (tripId) => {
   const [rows] = await db.query(`
     SELECT
-      tj.destination_id AS 식별자,
-      t.name AS 여행지명,
-      t.latitude AS 위도,
-      t.longitude AS 경도,
-      tj.visit_date AS 방문날자,
-      tj.visit_order AS 방문순서,
-      tj.visit_duration AS 예상방문시간
+      tj.destination_id        AS 식별자,
+      t.destination_name       AS 여행지명,
+      t.latitude               AS 위도,
+      t.longitude              AS 경도,
+      tj.visit_date            AS 방문날짜,
+      tj.visit_order           AS 방문순서,
+      tj.visit_duration        AS 예상방문시간,
+      tj.is_selected           AS 선택여부
     FROM ScheduleDestination tj
-    JOIN TravelDestination t ON tj.destination_id = t.id
+    JOIN TravelDestination t  ON tj.destination_id = t.id
     WHERE tj.schedule_id = ?
     ORDER BY tj.visit_date, tj.visit_order
   `, [tripId]);
 
-  // 날짜별로 그룹핑
   const grouped = {};
 
   for (const row of rows) {
-    const date = row.방문날자.toISOString().split('T')[0]; // ex: '2025-06-01'
-    if (!grouped[date]) grouped[date] = [];
+    // 날짜가 null이면 '미정' 키 사용
+    const key = row.방문날짜
+      ? row.방문날짜.toISOString().slice(0, 10)   // 'YYYY-MM-DD'
+      : '미정';
 
-    grouped[date].push({
-      식별자: row.식별자,
-      여행지명: row.여행지명,
-      방문순서: row.방문순서,
-      예상방문시간: row.예상방문시간,
-      위도: row.위도,
-      경도: row.경도
+    if (!grouped[key]) grouped[key] = [];
+
+    grouped[key].push({
+      식별자:        row.식별자,
+      여행지명:      row.여행지명,
+      방문순서:      row.방문순서,
+      예상방문시간:  row.예상방문시간,
+      위도:          row.위도,
+      경도:          row.경도,
+      선택여부:      row.선택여부
     });
   }
 
   return grouped;
-  // return {
-  //   "2025-06-01": [
-  //     { placeId: 1, name: "에펠탑", latitude: 48.8584, longitude: 2.2945 },
-  //     { placeId: 2, name: "루브르", latitude: 48.8606, longitude: 2.3376 },
-  //     { placeId: 3, name: "노트르담", latitude: 48.852968, longitude: 2.349902 }
-  //   ],
-  //   "2025-06-02": [
-  //     { placeId: 4, name: "몽마르트", latitude: 48.8867, longitude: 2.3431 },
-  //     { placeId: 5, name: "개선문", latitude: 48.8738, longitude: 2.2950 }
-  //   ]
-  // };
 };
+
 exports.updateVisitOrderAndDistance = async ({ tripId, placeId, date, order, distance }) => {
   await db.query(
     `UPDATE 여행일정_안에_여행지
@@ -229,6 +224,83 @@ exports.getAllTrips = async (userId, page, limit, travel_status = null) => {
     console.error('전체 여행 일정 조회 중 오류:', error);
     throw error;
   }
+};
+
+exports.getTripDetailWithSchedule = async (userId, tripId) => {
+  /* 1) 일정 기본 정보 */
+  const [[trip]] = await db.query(`
+    SELECT id, schedule_name, city, departure_date, end_date, travel_status,
+           created_at, updated_at
+      FROM TravelSchedule
+     WHERE id = ? AND user_id = ?
+  `, [tripId, userId]);
+  console.log(trip);
+  if (!trip) return null;
+
+  /* 2) 포함된 장소 */
+  const [rows] = await db.query(`
+    SELECT sd.id, sd.visit_date, sd.visit_order, sd.visit_time, sd.visit_duration,
+           td.id   AS destination_id,
+           td.destination_name,
+           td.latitude, td.longitude,
+           sd.is_selected
+      FROM ScheduleDestination sd
+      JOIN TravelDestination td ON sd.destination_id = td.id
+     WHERE sd.schedule_id = ?
+     ORDER BY sd.visit_date, sd.visit_order
+  `, [tripId]);
+  console.log(rows);
+  /* 3) 날짜별 묶기 */
+  const schedule = {};
+  rows.forEach(r => {
+    const key = r.visit_date ? r.visit_date.toISOString().slice(0, 10) : '미정';
+    if (!schedule[key]) schedule[key] = [];
+    schedule[key].push({
+      id:            r.id,
+      destinationId: r.destination_id,
+      name:          r.destination_name,
+      order:         r.visit_order,
+      time:          r.visit_time,
+      duration:      r.visit_duration,
+      latitude:      r.latitude,
+      longitude:     r.longitude,
+      isSelected:    r.is_selected
+    });
+  });
+  console.log(schedule);
+  return { trip, schedule };
+};
+
+exports.insertScheduleDestination = async (scheduleId, d) => {
+  /* 1) TravelDestination 간단 등록 (위치정보 미정 → 0) */
+  const [destRes] = await db.execute(`
+    INSERT INTO TravelDestination
+      (destination_name, destination_description,
+       latitude, longitude, category)
+     VALUES (?,?,0,0,NULL)`,
+    [d.title, d.description ?? '']
+  );
+  const destId = destRes.insertId;
+
+  /* 2) ScheduleDestination 연결 */
+  const [sdRes] = await db.execute(`
+    INSERT INTO ScheduleDestination
+      (destination_id, schedule_id, visit_order,
+       visit_time, visit_date, transportation_id, is_selected)
+     VALUES ( ?, ?, 
+              (SELECT IFNULL(MAX(visit_order),0)+1 FROM ScheduleDestination WHERE schedule_id = ?),
+              ?, ?, NULL, 1)`,
+    [destId, scheduleId, scheduleId, d.time, d.visit_date]
+  );
+
+  return { sdId: sdRes.insertId, destinationId: destId };
+};
+
+exports.deleteScheduleDestination = async (scheduleId, sdId) => {
+  await db.execute(
+    `DELETE FROM ScheduleDestination WHERE id = ? AND schedule_id = ?`,
+    [sdId, scheduleId]
+  );
 };
 
 // 특정 여행 일정 조회 함수

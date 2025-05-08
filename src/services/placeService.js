@@ -89,62 +89,79 @@ class PlaceService {
     }
   }
 
-  async getFinalPlaceRecommendations(userId, tripDto) {
+  async getFinalPlaceRecommendations(userId, tripDto, tripId) {
     try {
-      console.log('tripDto:', tripDto);
-      const aiRequestData = tripDto.toAIRequestFormat();
-      
-      // Python 호출 → Tour API 보강
-      const aiResponse     = await this.callPythonScript(aiRequestData);
-      console.log('AI Response:', aiResponse);
-      const enrichedPlaces = await this.enrichPlacesWithTourAPI(
-        aiResponse,
-        aiRequestData.city
-      );
+      /* 1) AI 요청 → 응답 → Tour-API 보강 */
+      const aiReq = tripDto.toAIRequestFormat();          // visit_date, departure_date, trip_duration 포함
+      const raw   = await this.callPythonScript(aiReq);
+      const places = await this.enrichPlacesWithTourAPI(raw, aiReq.city);
   
-      // === 일정(plan) 객체 생성 =======================================
-      const daysCnt   = aiRequestData.trip_duration || 1;
-      const perDay    = Math.ceil(enrichedPlaces.length / daysCnt);
-      const plan      = { days: [] };
+      /* ----------  날짜 범위 계산  ---------- */
+      const MS_DAY = 86_400_000;
+  
+      // ① 시작일(startDate)
+      const startDate = aiReq.visit_date        ? new Date(aiReq.visit_date)
+                      : aiReq.departure_date    ? new Date(aiReq.departure_date)
+                      :                          new Date();           // fallback = 오늘
+  
+      // ② 여행일수(daysCnt)
+      let daysCnt = Number(aiReq.trip_duration) || 0;
+      if (!daysCnt && aiReq.visit_date && aiReq.departure_date) {
+        // 두 날짜 차이 +1  (yyyy-mm-dd 만 비교)
+        const dt1 = new Date(aiReq.visit_date.split('T')[0]);
+        const dt2 = new Date(aiReq.departure_date.split('T')[0]);
+        daysCnt = Math.max(1, Math.round((dt2 - dt1) / MS_DAY) + 1);
+      }
+      if (!daysCnt) daysCnt = 1;
+  
+      /* ----------  플랜 & flatPlaces ---------- */
+      const perDay  = Math.ceil(places.length / daysCnt);
+      const plan       = { days: [] };
+      const flatPlaces = [];
   
       for (let d = 0; d < daysCnt; d++) {
-        const slice = enrichedPlaces.slice(d * perDay, (d + 1) * perDay);
+        // startDate + d
+        const visitDateObj = new Date(startDate.getTime() + d * MS_DAY);
+        const visitDateISO = visitDateObj.toISOString().slice(0, 10);  // 'YYYY-MM-DD'
   
-        const items = slice.map((p, idx) => ({
-          id:        `${d + 1}-${idx + 1}`,
-          title:     p.place_name || p['여행지명'],
-          description:
-            p.description ||
-            `${p.place_name || p['여행지명']}의 멋진 장소입니다.`,
-          image:     p.image || '/images/default-place.jpg',
-          tags:      this.generatePlaceTags(
-                       p.activity_ids,
-                       p.emotion_ids,
-                       p['분류']
-                     ),
-          region:    aiRequestData.city?.toLowerCase() || 'unknown',
-        }));
+        const slice = places.slice(d * perDay, (d + 1) * perDay);
+  
+        const items = slice.map((p, idx) => {
+          const globalOrder = d * perDay + idx + 1;
+  
+          /* 프런트 카드 */
+          const card = {
+            id:    `${d + 1}-${idx + 1}`,
+            title: p.place_name || p['여행지명'],
+            description:
+              p.description ??
+              `${p.place_name || p['여행지명']}의 멋진 장소입니다.`,
+            image: p.image || '/images/default-place.jpg',
+            tags:  this.generatePlaceTags(p.activity_ids, p.emotion_ids, p['분류']),
+            region: aiReq.city?.toLowerCase() || 'unknown',
+            visit_date: visitDateISO,           // 카드에도 날짜
+          };
+  
+          /* DB 레코드 */
+          flatPlaces.push({
+            title:       card.title,
+            description: card.description,
+            image:       card.image,
+            category:    card.tags[0] ?? null,
+            order:       globalOrder,
+            visit_date:  visitDateISO,
+          });
+  
+          return card;
+        });
   
         plan.days.push({ day: d + 1, items });
       }
-
-      const flatPlaces = [];
-        plan.days.forEach(day => {
-          day.items.forEach((item, idx) => {
-            flatPlaces.push({
-              title:       item.title,
-              description: item.description,
-              image:       item.image,
-              category:    item.tags[0],   // 태그 배열 중 의미 있는 걸 골라서 저장
-              order:       idx + 1
-            });
-          });
-        });
-        await placeRepository.saveRecommendations(userId, tripId, flatPlaces);
-
-  return new FinalPlaceRecommendationDto(plan);
   
-      // DTO로 래핑해서 리턴
+      /* ----------  저장  ---------- */
+      await placeRepository.saveRecommendations(userId, tripId, flatPlaces);
+  
+      /*  ---------- 결과 반환 ---------- */
       return new FinalPlaceRecommendationDto(plan);
   
     } catch (err) {
@@ -152,6 +169,7 @@ class PlaceService {
       throw new Error('여행지 추천을 가져오는 중 오류가 발생했습니다.');
     }
   }
+  
   
 
   async enrichPlacesWithTourAPI(places, city) {

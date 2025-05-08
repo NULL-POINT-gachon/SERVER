@@ -1,4 +1,4 @@
-const tripService = require('../services/routeOptimizerService');
+const tripOptimizerService = require('../services/routeOptimizerService');
 const tripservice = require('../services/tripService');
 
 const { TripCreateDto } = require('../dtos/tripDto');
@@ -9,7 +9,7 @@ exports.optimizeRouteFromClientData = async (req, res) => {
   try {
     const { tripId } = req.params;
     const optimizeRequestDto = req.body; // 수정한 부분
-    const result = await tripService.optimizeRouteFromClientData(optimizeRequestDto); // 수정한 부분
+    const result = await tripOptimizerService.optimizeRouteFromClientData(optimizeRequestDto); // 수정한 부분
 
     res.status(200).json(result);
   } catch (error) {
@@ -21,7 +21,7 @@ exports.optimizeRouteFromClientData = async (req, res) => {
 exports.getOptimizedRoute = async (req, res) => {
   try {
     const { tripId } = req.params;
-    const result = await tripService.getOptimizedRouteByTripId(tripId);
+    const result = await tripOptimizerService.getOptimizedRouteByTripId(tripId);
     res.json(result);
   } catch (error) {
     console.error('경로 최적화 중 오류:', error);
@@ -33,7 +33,7 @@ exports.saveOptimizedRoute = async (req, res) => {
   try {
     const { tripId } = req.params;
     const data = req.body;
-    await tripService.saveOptimizedRoute(tripId, data);
+    await tripOptimizerService.saveOptimizedRoute(tripId, data);
     res.status(200).json({ message: '최적 경로 저장 완료' });
   } catch (error) {
     console.error('최적 경로 저장 중 오류:', error);
@@ -43,14 +43,14 @@ exports.saveOptimizedRoute = async (req, res) => {
 
 exports.getTotalDistanceAndTime = async (req, res) => {
   const tripId = Number(req.params.tripId);
-  const result = await tripService.calculateTotalDistanceAndTime(tripId);
+  const result = await tripOptimizerService.calculateTotalDistanceAndTime(tripId);
   res.status(200).json(result);
 };
 
 exports.optimizeSchedule = async (req, res) => {
   try {
     const scheduleId = Number(req.params.scheduleId);
-    await tripService.optimizeScheduleById(scheduleId);
+    await tripService.tripOptimizerService(scheduleId);
     res.status(200).json({
       scheduleId,
       optimized: true,
@@ -66,7 +66,7 @@ exports.updateTransportation = async (req, res) => {
   try {
     const { tripId } = req.params;
     const { transportation_id } = req.body;
-    await tripService.updateTransportation(tripId, transportation_id);
+    await tripOptimizerService.updateTransportation(tripId, transportation_id);
     res.status(200).json({
       tripId: Number(tripId),
       transportation_id,
@@ -81,7 +81,7 @@ exports.updateTransportation = async (req, res) => {
 exports.getMapMarkers = async (req, res) => {
   try {
     const { tripId } = req.params;
-    const result = await tripService.getOptimizedRouteByTripId(tripId);
+    const result = await tripOptimizerService.getOptimizedRouteByTripId(tripId);
 
     const mapData = {};
     for (const [date, places] of Object.entries(result)) {
@@ -104,7 +104,7 @@ exports.getMapMarkers = async (req, res) => {
 exports.optimizeTrip = async (req, res) => {
   try {
     const { tripId } = req.params;
-    const result = await tripService.getOptimizedRouteByTripId(tripId);
+    const result = await tripOptimizerService.getOptimizedRouteByTripId(tripId);
     res.status(200).json(result);
   } catch (error) {
     console.error('여행 일정 재최적화 중 오류:', error);
@@ -199,35 +199,34 @@ exports.getAllTrips = async (req, res, next) => {
   }
 };
 
+exports.addSchedulePlace = async (req,res,next) => {
+  try {
+    const userId = req.user.userId;
+    const { tripId } = req.params;
+    const dto = { ...req.body };      // title, time, visit_date, transport …
+    const result = await tripSvc.addSchedulePlace(userId, Number(tripId), dto);
+    res.status(201).json({ result_code:201, data: result });
+  } catch(err){ next(err); }
+};
+
+// ── 일정 한 건 삭제 ──────────────────────────
+exports.removeSchedulePlace = async (req,res,next) => {
+  try {
+    const userId = req.user.userId;
+    const { tripId, sdId } = req.params;
+    await tripSvc.removeSchedulePlace(userId, Number(tripId), Number(sdId));
+    res.json({ result_code:200, deleted:true });
+  } catch(err){ next(err); }
+};
+
 // 여행 일정 상세 조회 컨트롤러 함수
 exports.getTripDetail = async (req, res, next) => {
   try {
-    // Path 파라미터에서 tripId 추출
-    const { tripId } = req.params;
-    
-    // JWT 인증 미들웨어에서 설정한 사용자 ID 가져오기
     const userId = req.user.userId;
-    
-    // 서비스 함수 호출
-    const result = await tripservice.getTripDetail(userId, tripId);
-    
-    // 성공 응답 반환
-    res.status(200).json(result);
-    
-  } catch (error) {
-    console.error('여행 일정 상세 조회 컨트롤러 오류:', error);
-    
-    // 커스텀 에러 처리
-    if (error.status) {
-      return res.status(error.status).json({
-        result_code: error.status,
-        message: error.message
-      });
-    }
-    
-    // 예외 처리 미들웨어로 전달
-    next(error);
-  }
+    const { tripId } = req.params;
+    const { trip, schedule } = await tripservice.getTripDetail(userId, tripId);
+    res.status(200).json({ result_code: 200, trip, schedule });
+  } catch (err) { next(err); }
 };
 
 // src/controllers/tripController.js 확인
