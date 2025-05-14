@@ -128,12 +128,9 @@ exports.getTotalTripCount = async (userId, travel_status = null) => {
 
 exports.getAllTrips = async (userId, page = 1, limit = 10, status = null) => {
   const offset = (page - 1) * limit;
-  let query = `SELECT id, schedule_name, city, departure_date, end_date, status, created_at, updated_at FROM TravelSchedule WHERE user_id = ?`;
+  let query = `SELECT id, schedule_name, city, departure_date, end_date, status, created_at, updated_at FROM TravelSchedule WHERE user_id = ? AND status != 'X'`;
   const params = [userId];
-  if (status) {
-    query += ' AND status = ?';
-    params.push(status);
-  }
+
   query += ` ORDER BY created_at DESC LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
   const [rows] = await db.execute(query, params);
   return rows;
@@ -150,7 +147,7 @@ exports.getTripDetailWithSchedule = async (userId, tripId) => {
   // 2. 장소 정보 조회 (is_selected 제거)
   const [rows] = await db.query(`
     SELECT sd.id, sd.visit_date, sd.visit_order, sd.visit_time, sd.visit_duration,
-           td.id AS destination_id, td.name AS destination_name,
+           td.id AS destination_id, td.destination_name AS destination_name,
            td.latitude, td.longitude
     FROM ScheduleDestination sd
     JOIN TravelDestination td ON sd.destination_id = td.id
@@ -179,9 +176,110 @@ exports.getTripDetailWithSchedule = async (userId, tripId) => {
   return { trip, schedule };
 };
 
+/* ------------------------------------------------------------------
+ * 일정-날짜에 장소 1개 추가
+ * 1) 동일 이름의 TravelDestination 있으면 재사용,
+ *    없으면 새 레코드 생성
+ * 2) visit_order = (해당 날짜 MAX)+1
+ * 3) ScheduleDestination INSERT 후 PK 반환
+ * ------------------------------------------------------------------*/
+exports.addPlaceToSchedule = async (scheduleId, dto) => {
+  /* 1) TravelDestination 찾거나 생성 */
+  const [[dest]] = await db.execute(
+    `SELECT id FROM TravelDestination
+      WHERE destination_name = ? LIMIT 1`,
+    [dto.destination_name]
+  );
+
+  let destId = dest?.id;
+  if (!destId) {
+    const [ins] = await db.execute(
+      `INSERT INTO TravelDestination
+         (destination_name, destination_description,
+          latitude, longitude, category, image)
+       VALUES (?,?,?,?,?,?)`,
+      [
+        dto.destination_name,
+        dto.description ?? '',
+        dto.latitude   ?? 0,
+        dto.longitude  ?? 0,
+        dto.category   ?? null,
+        dto.image      ?? null
+      ]
+    );
+    destId = ins.insertId;
+  }
+
+  /* 2) 이미 같은 destination_id 가 붙어있나? */
+  const [[exists]] = await db.execute(
+    `SELECT id FROM ScheduleDestination
+      WHERE destination_id = ? AND schedule_id = ?`,
+    [destId, scheduleId]
+  );
+
+  /* 3) visit_order 계산 (해당 날짜 기준) */
+  const [[{ nextOrder }]] = await db.execute(
+    `SELECT IFNULL(MAX(visit_order),0)+1 AS nextOrder
+       FROM ScheduleDestination
+      WHERE schedule_id = ?
+        AND (visit_date <=> ?)`,
+    [scheduleId, dto.visit_date ?? null]
+  );
+
+  let sdId;
+
+  if (exists) {
+    /* → UPDATE */
+    await db.execute(
+      `UPDATE ScheduleDestination
+          SET visit_date = ?,
+              visit_time = ?,
+              visit_order = ?,
+              updated_at = NOW()
+        WHERE id = ?`,
+      [
+        dto.visit_date ?? null,
+        dto.visit_time ?? '12:00',
+        nextOrder,
+        exists.id
+      ]
+    );
+    sdId = exists.id;
+  } else {
+    /* → INSERT */
+    const [sd] = await db.execute(
+      `INSERT INTO ScheduleDestination
+         (destination_id, schedule_id, visit_order,
+          visit_time, visit_date,
+          transportation_id, created_at, updated_at)
+       VALUES (?,?,?,?,?,NULL,NOW(),NOW())`,
+      [
+        destId,
+        scheduleId,
+        nextOrder,
+        dto.visit_time ?? '12:00',
+        dto.visit_date ?? null
+      ]
+    );
+    sdId = sd.insertId;
+  }
+
+  return { sdId, destinationId: destId };
+};
+
+exports.getDestinationIdByName = async (destination_name) => {
+  const [[dest]] = await db.execute(
+    `SELECT id FROM TravelDestination WHERE destination_name = ?`,
+    [destination_name]
+  );
+  console.log("getDestinationIdByName ▶", { destination_name, dest });
+  return dest?.id ?? null;
+};
+
 exports.insertScheduleDestination = async (scheduleId, d) => {
+  console.log("insertScheduleDestination ▶", { scheduleId, d });
   const [destRes] = await db.execute(
-    `INSERT INTO TravelDestination (name, description, latitude, longitude, category) VALUES (?,?,?,?,NULL)`,
+    `INSERT INTO TravelDestination (destination_name, destination_description, latitude, longitude, category) VALUES (?,?,?,?,NULL)`,
     [d.title, d.description ?? '', 0, 0]
   );
   const destId = destRes.insertId;
@@ -195,8 +293,33 @@ exports.insertScheduleDestination = async (scheduleId, d) => {
   return { sdId: sdRes.insertId, destinationId: destId };
 };
 
-exports.deleteScheduleDestination = async (scheduleId, sdId) => {
-  await db.execute(`DELETE FROM ScheduleDestination WHERE id = ? AND schedule_id = ?`, [sdId, scheduleId]);
+exports.deleteTrip = async (tripId, userId) => {
+  await db.execute(`UPDATE TravelSchedule
+      SET    status      = 'X',
+            updated_at  = NOW()
+      WHERE  id = ?
+      AND    user_id = ?;`, [tripId, userId]);
+
+  return true;
+};
+
+exports.deleteScheduleDestination = async (scheduleId, destinationName) => {
+  /*
+   * 1) TravelDestination 과 조인해서 destination_name → destination_id 매핑
+   * 2) visit_date 를 NULL 로 업데이트 (soft-delete)
+   */
+  const [result] = await db.execute(
+    `UPDATE ScheduleDestination sd
+       JOIN TravelDestination td ON td.id = sd.destination_id
+     SET  sd.visit_date  = NULL,
+          sd.updated_at  = NOW()
+     WHERE sd.schedule_id      = ?
+       AND td.destination_name = ?
+     `,                     
+    [scheduleId, destinationName]
+  );
+
+  return result.affectedRows > 0;           // true = 성공
 };
 
 exports.getTripById = async (userId, tripId) => {
@@ -236,7 +359,7 @@ exports.updateTripBasicInfo = async (tripId, userId, updateData) => {
 
   const query = `
     UPDATE TravelSchedule 
-    SET ${updateFields.join(', ')}, updated_at = NOW() 
+    SET ${updateFields.join(', ')}, updated_at = NOW(), status = 'O'
     WHERE id = ? AND user_id = ?
   `;
   values.push(tripId, userId);

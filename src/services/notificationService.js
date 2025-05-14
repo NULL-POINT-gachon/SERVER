@@ -1,6 +1,7 @@
 const notificationRepository = require('../repositories/notificationRepository');
 const userRepository = require('../repositories/userRepository');
-const tripShareRepository = require('../repositories/tripShareRepository');
+const tripShareRepository = require('../repositories/tripSharerepository');
+  
 
 /**
  * 사용자의 알림 목록 조회

@@ -3,6 +3,23 @@
 const tripRepository = require('../repositories/tripRepository');
 const { TripResponseDto } = require('../dtos/tripDto');
 
+exports.getDestinationIdByName = async (destination_name) => {
+  return await tripRepository.getDestinationIdByName(destination_name);
+};
+
+exports.deleteTrip = async (userId, tripId) => {
+  try {
+    console.log("deleteTrip ▶", { userId, tripId });
+    const result = await tripRepository.deleteTrip(tripId, userId);
+    if (!result) throw { status: 404, message: '일정을 찾을 수 없거나 삭제 권한이 없습니다' };
+    return { result_code: 200, message: '일정이 성공적으로 삭제되었습니다' };
+  } catch (error) {
+    console.error('여행 일정 삭제 서비스 오류:', error);
+    throw { status: 500, message: '여행 일정 삭제 중 서버 오류가 발생했습니다' };
+  }
+};
+
+
 // 여행 일정 생성 서비스 함수
 exports.createTrip = async (userId, tripDto) => {
   try {
@@ -93,12 +110,16 @@ exports.getAllTrips = async (userId, page, limit, travel_status) => {
     }
   };
 
-  exports.addSchedulePlace = async (userId, tripId, dto) => {
-    return await tripRepository.insertScheduleDestination(tripId, dto);
-  };
   
-  exports.removeSchedulePlace = async (userId, tripId, sdId) => {
-    return await tripRepository.deleteScheduleDestination(tripId, sdId);
+  exports.removeSchedulePlace = async (tripId, destination_name) => {
+    console.log("removeSchedulePlace ▶", { tripId, destination_name });
+    return await tripRepository.deleteScheduleDestination(tripId, destination_name);
+  };
+
+  exports.addSchedulePlace = async (userId, tripId, dto) => {
+    // (필요하다면 소유권 검증 후)
+    console.log("addSchedulePlace ▶", { userId, tripId, dto });
+    return await tripRepository.addPlaceToSchedule(tripId, dto);
   };
 
   // 여행 일정 상세 조회 서비스 함수

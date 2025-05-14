@@ -3,6 +3,15 @@ const tripService = require('../services/tripService');
 
 const { TripCreateDto } = require('../dtos/tripDto');
 
+exports.deleteTrip = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    console.log(userId);
+    const { tripId } = req.params;
+    await tripService.deleteTrip(userId, tripId);
+    res.json({ result_code: 200, deleted: true });
+  } catch(err){ next(err); }
+};
 
 // 🔁 AI 서버 결과 기반 경로 최적화 API
 exports.optimizeRouteFromClientData = async (req, res) => {
@@ -179,7 +188,7 @@ exports.getAllTrips = async (req, res, next) => {
     
     // 비즈니스 로직 처리를 서비스에 위임
     const result = await tripService.getAllTrips(userId, page, limit, travelStatus);
-    
+
     // 성공 응답 반환
     res.status(200).json(result);
     
@@ -212,9 +221,10 @@ exports.addSchedulePlace = async (req,res,next) => {
 // ── 일정 한 건 삭제 ──────────────────────────
 exports.removeSchedulePlace = async (req,res,next) => {
   try {
-    const userId = req.user.userId;
-    const { tripId, sdId } = req.params;
-    await tripService.removeSchedulePlace(userId, Number(tripId), Number(sdId));
+    const { tripId } = req.params;
+    const { destination_name } = req.body;
+
+    await tripService.removeSchedulePlace(tripId, destination_name);
     res.json({ result_code:200, deleted:true });
   } catch(err){ next(err); }
 };

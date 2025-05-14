@@ -11,7 +11,7 @@ class PlaceRepository {
         // 1) TravelDestination 저장
         const [destRes] = await conn.execute(
           `INSERT INTO TravelDestination
-           (name, description, latitude, longitude, category, image)
+           (destination_name, destination_description, latitude, longitude, category, image)
            VALUES (?, ?, ?, ?, ?, ?)`,
           [
             place.title ?? null,

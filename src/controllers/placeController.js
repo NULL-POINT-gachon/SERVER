@@ -65,6 +65,7 @@ const getFinalPlaceRecommendations = async (req, res, next) => {
         message: "필수 입력 필드가 누락되었습니다"
       });
     }
+    console.log("req.body", req.body);
 
     const preferenceDto = new FinalPlacePreferenceDto(
       city,

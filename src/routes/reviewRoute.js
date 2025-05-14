@@ -110,11 +110,11 @@ const authMiddleware = require('../middlewares/auth');
  *       200:
  *         description: 리뷰가 삭제되었습니다.
  */
-router.post('/', authMiddleware.authenticateToken, controller.createReview);
+router.post('/', authMiddleware.authenticateToken, controller.createOrUpdateReview);
 router.get('/place/:destinationId', authMiddleware.authenticateToken, controller.getReviewsByPlace);
 router.get('/all', authMiddleware.authenticateToken, controller.getAllReviews);
 router.get('/user/:userId', authMiddleware.authenticateToken, controller.getReviewsByUser);
 router.put('/:reviewId', authMiddleware.authenticateToken, controller.updateReview);
 router.delete('/:reviewId', authMiddleware.authenticateToken, controller.deleteReview);
-
+router.get('/hot-destinations', controller.getHotPlaces);
 module.exports = router;

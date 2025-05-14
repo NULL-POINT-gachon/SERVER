@@ -3,8 +3,23 @@ const { PlaceRecommendationDto } = require('../dtos/placePreferenceDto');
 const { FinalPlaceRecommendationDto } = require('../dtos/FinalPlacePreferenceDto');
 const { spawn } = require('child_process');
 const axios = require('axios');
-
+const path = require('path');
 class PlaceService {
+
+  getDefaultImage(category) {
+    const categoryImages = {
+      '식당/카페': '/images/default-restaurant.png',
+      '상업지구(거리, 시장, 쇼핑시설)': '/images/default-market.png',
+      '해수욕장/해변/등대': '/images/default-beach.png',
+      '산/휴양림/수목원': '/images/default-mountain.png',
+      '박물관/전시관/미술관/기념관/과학관': '/images/default-museum.png',
+      '체험관': '/images/default-experience.png',
+      '놀이공원/테마파크': '/images/default-themepark.png',
+      '캠핑장/방갈로': '/images/default-camping.png'
+    };
+    
+    return categoryImages[category] || '/images/default-place.png';
+  }
 
   callPythonScript(detailArgs) {
     // ── 배열 아닌 경우를 대비한 보정 ───────────────────
@@ -17,7 +32,7 @@ class PlaceService {
                      : (detailArgs.emotion_ids ? [detailArgs.emotion_ids] : []);
   
     return new Promise((resolve, reject) => {
-      const scriptPath = '/Users/chaejinseong/graduation-project/ai/src/recommender/ai_recommendation.py';  
+      const scriptPath = path.join(__dirname, '../../../ai/src/recommender/ai_recommendation.py');
       const proc = spawn('python', [
         scriptPath,
         '--mode', 'detail',
@@ -75,7 +90,7 @@ class PlaceService {
         id: (index + 1).toString(),
         title: place.place_name || place['여행지명'],
         description: place.description || `${place.place_name || place['여행지명']}의 멋진 장소입니다.`,
-        image: place.image || `/images/default-place.jpg`,
+        image: place.image || `/images/default-place.png`,
         tags: this.generatePlaceTags(place.activity_ids, place.emotion_ids, place['분류']),
       }));
       
@@ -91,7 +106,9 @@ class PlaceService {
   async getFinalPlaceRecommendations(userId, tripDto, tripId) {
     try {
       /* 1) AI 요청 → 응답 → Tour-API 보강 */
+      console.log("tripDto", tripDto);
       const aiReq = tripDto.toAIRequestFormat();          // visit_date, departure_date, trip_duration 포함
+      console.log("aiReq", aiReq);
       const raw   = await this.callPythonScript(aiReq);
       const places = await this.enrichPlacesWithTourAPI(raw, aiReq.city);
   
@@ -105,6 +122,7 @@ class PlaceService {
   
       // ② 여행일수(daysCnt)
       let daysCnt = Number(aiReq.trip_duration) || 0;
+      console.log("daysCnt", daysCnt);
       if (!daysCnt && aiReq.visit_date && aiReq.departure_date) {
         // 두 날짜 차이 +1  (yyyy-mm-dd 만 비교)
         const dt1 = new Date(aiReq.visit_date.split('T')[0]);
@@ -112,6 +130,7 @@ class PlaceService {
         daysCnt = Math.max(1, Math.round((dt2 - dt1) / MS_DAY) + 1);
       }
       if (!daysCnt) daysCnt = 1;
+      console
   
       /* ----------  플랜 & flatPlaces ---------- */
       const perDay  = Math.ceil(places.length / daysCnt);
@@ -135,7 +154,7 @@ class PlaceService {
             description:
               p.description ??
               `${p.place_name || p['여행지명']}의 멋진 장소입니다.`,
-            image: p.image || '/images/default-place.jpg',
+            image: p.image || '/images/default-place.png',
             tags:  this.generatePlaceTags(p.activity_ids, p.emotion_ids, p['분류']),
             region: aiReq.city?.toLowerCase() || 'unknown',
             visit_date: visitDateISO,           // 카드에도 날짜
@@ -150,6 +169,7 @@ class PlaceService {
             order:       globalOrder,
             visit_date:  visitDateISO,
           });
+          console.log("card", card);
   
           return card;
         });
@@ -160,8 +180,10 @@ class PlaceService {
       /* ----------  저장  ---------- */
       await placeRepository.saveRecommendations(userId, tripId, flatPlaces);
   
+      console.log("plan", new FinalPlaceRecommendationDto(plan));
       /*  ---------- 결과 반환 ---------- */
       return new FinalPlaceRecommendationDto(plan);
+
   
     } catch (err) {
       console.error('여행지 추천 서비스 오류:', err);
@@ -337,20 +359,6 @@ class PlaceService {
     return descriptions[category] || `${placeName}은(는) ${category}의 인기 명소입니다. 여행객들에게 특별한 경험을 제공합니다.`;
   }
 
-  getDefaultImage(category) {
-    const categoryImages = {
-      '식당/카페': '/images/default-restaurant.jpg',
-      '상업지구(거리, 시장, 쇼핑시설)': '/images/default-market.jpg',
-      '해수욕장/해변/등대': '/images/default-beach.jpg',
-      '산/휴양림/수목원': '/images/default-mountain.jpg',
-      '박물관/전시관/미술관/기념관/과학관': '/images/default-museum.jpg',
-      '체험관': '/images/default-experience.jpg',
-      '놀이공원/테마파크': '/images/default-themepark.jpg',
-      '캠핑장/방갈로': '/images/default-camping.jpg'
-    };
-    
-    return categoryImages[category] || '/images/default-place.jpg';
-  }
     
 }
 

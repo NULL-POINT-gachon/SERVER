@@ -1,13 +1,16 @@
 const reviewService = require('../services/reviewService');
-
+const tripService = require('../services/tripService');
 exports.createReview = async (req, res) => {
   try {
+    console.log("createReview ▶", req.body);
     const userId = req.user.userId;
-    const { destination_id, rating, content } = req.body;
+    const { destination_name, rating, content } = req.body;
+
+    const destinationId = await tripService.getDestinationIdByName(destination_name);
 
     const result = await reviewService.createReview({
       userId,
-      destinationId: destination_id,
+      destinationId,
       rating,
       content
     });
@@ -19,6 +22,43 @@ exports.createReview = async (req, res) => {
   }
 };
 
+exports.getHotPlaces = async (req, res) => {
+  try {
+    const list = await reviewService.getHotPlaces();
+    res.json({ result_code: 200, data: list });
+  } catch (e) {
+    console.error('hot places 조회 실패:', e);
+    res.status(500).json({ message: 'hot places 조회 실패' });
+  }
+};
+
+exports.createOrUpdateReview = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { destination_id, destination_name, rating, content } = req.body;
+
+    let destId = destination_id;
+    if (!destId) {
+      if (!destination_name)
+        return res.status(400).json({ message: 'destination_id 또는 destination_name 필요' });
+      destId = await tripService.getDestinationIdByName(destination_name);
+      if (!destId)
+        return res.status(404).json({ message: '여행지를 찾을 수 없습니다' });
+    }
+
+    const { reviewId, updated } = await reviewService.upsertReview({
+      userId, destinationId: destId, rating, content
+    });
+
+    res.status(updated ? 200 : 201).json({
+      message: updated ? '리뷰가 수정되었습니다' : '리뷰가 작성되었습니다',
+      reviewId
+    });
+  } catch (err) {
+    console.error('리뷰 저장 실패:', err);
+    res.status(500).json({ message: '리뷰 저장 실패' });
+  }
+};
 
 exports.getReviewsByPlace = async (req, res) => {
   try {

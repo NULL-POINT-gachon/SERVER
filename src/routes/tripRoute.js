@@ -404,7 +404,8 @@ router.get('/all', authMiddleware.authenticateToken, tripController.getAllTrips)
 // 기존 라우터 설정 아래에 추가
 router.get('/:tripId', authMiddleware.authenticateToken, tripController.getTripDetail);
 router.post('/:tripId/schedule', authMiddleware.authenticateToken, tripController.addSchedulePlace);
-router.delete('/:tripId/schedule/:scheduleId', authMiddleware.authenticateToken, tripController.removeSchedulePlace);
+router.delete('/:tripId/schedule', authMiddleware.authenticateToken, tripController.removeSchedulePlace);
+router.delete('/:tripId', authMiddleware.authenticateToken, tripController.deleteTrip);
 module.exports = router;
 
 /**

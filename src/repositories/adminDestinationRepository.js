@@ -37,31 +37,39 @@ exports.findDestinationById = async (destinationId) => {
 };
 
 // 여행지 등록
-exports.createDestination = async (destinationData) => {
+exports.createDestination = async (data) => {
   const query = `
     INSERT INTO TravelDestination (
-      name, description, latitude, longitude,
-      category, indoor_outdoor, admission_fee, image, status
+      destination_name, destination_description,
+      latitude, longitude,
+      category, indoor_outdoor, entrance_fee, image, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+    ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)   -- ⭐ 핵심
   `;
 
-  const values = [
-    destinationData.name,
-    destinationData.description,
-    destinationData.latitude,
-    destinationData.longitude,
-    destinationData.category,
-    destinationData.indoor_outdoor,
-    destinationData.admission_fee,
-    destinationData.image // image 필드만 사용
+  const vals = [
+    data.destination_name,          // ← 필드명 통일 주의
+    data.description,
+    data.latitude,
+    data.longitude,
+    data.category,
+    data.indoor_outdoor,
+    data.entrance_fee,
+    data.image
   ];
 
   try {
-    const [result] = await db.execute(query, values);
-    return { id: result.insertId, ...destinationData, status: 1 };
-  } catch (error) {
-    console.error('여행지 등록 중 오류:', error);
-    throw error;
+    const [result] = await db.execute(query, vals);
+
+    // insertId ➜ 새로 넣었든, 중복이든 항상 해당 PK가 들어온다
+    const id = result.insertId;
+
+    // 완전한 객체를 리턴하려면 다시 SELECT
+    const dest = await exports.findDestinationById(id);
+    return dest;
+  } catch (err) {
+    console.error('여행지 등록 중 오류:', err);
+    throw err;
   }
 };
 

@@ -10,12 +10,12 @@ class RecommendationRepository {
       // 1. TravelSchedule 생성
       const [scheduleRes] = await conn.execute(
         `INSERT INTO TravelSchedule
-         (user_id, schedule_name, city, departure_date, end_date, travel_status)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [userId, `${startDate} 여행`, '', startDate, endDate, 'planned']
+         (user_id, schedule_name, city, departure_date, end_date, travel_status, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userId, `${startDate} 여행`, '', startDate, endDate, 'planned', 'X']
       );
       const scheduleId = scheduleRes.insertId;
-
+      console.log('[step ④] TravelSchedule 생성 결과', scheduleId);
       // 2. TravelPreference 생성
       const [prefRes] = await conn.execute(
         `INSERT INTO TravelPreference (schedule_id, companion_count)
@@ -23,7 +23,7 @@ class RecommendationRepository {
         [scheduleId, companionsCount]
       );
       const preferenceId = prefRes.insertId;
-
+      console.log('[step ⑤] TravelPreference 생성 결과', preferenceId);
       // 3. PreferenceMood 추가
       if (emotionIds?.length) {
         await conn.query(
@@ -31,13 +31,13 @@ class RecommendationRepository {
           [emotionIds.map(m => [preferenceId, m])]
         );
       }
-
+      console.log('[step ⑥] PreferenceMood 추가 결과', emotionIds);
       // 4. 추천된 여행지들 등록
       let order = 1;
       for (const rec of recommendations) {
         const [destRes] = await conn.execute(
           `INSERT INTO TravelDestination
-           (name, description, latitude, longitude, category, image)
+           (destination_name, destination_description, latitude, longitude, category, image)
            VALUES (?, ?, ?, ?, ?, ?)`,
           [
             rec.item_name,
@@ -48,7 +48,7 @@ class RecommendationRepository {
             rec.image || '/images/default.jpg'
           ]
         );
-
+        console.log('[step ⑦] TravelDestination 생성 결과', destRes.insertId);
         await conn.execute(
           `INSERT INTO ScheduleDestination
            (destination_id, schedule_id, visit_order)
