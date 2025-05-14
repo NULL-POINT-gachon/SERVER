@@ -1,7 +1,15 @@
 const reviewRepository = require('../repositories/reviewRepository');
+const notificationService = require('../services/notificationService');
 
 exports.createReview = async ({ userId, destinationId, rating, content }) => {
-  return await reviewRepository.insertReview(userId, destinationId, rating, content);
+  const review = await reviewRepository.insertReview(userId, destinationId, rating, content);
+  
+  // 리뷰 작성 시 알림 생성 (필요한 경우)
+  await notificationService.createCommentNotification(userId, destinationId);
+  
+  return review;
+  
+
 };
 
 exports.getReviewsByDestination = async (destinationId) => {

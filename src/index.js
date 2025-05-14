@@ -25,6 +25,10 @@ const adminRoute = require('./routes/adminRoute');
 const adminDestinationRoute = require('./routes/adminDestinationRoute');
 const adminReviewRoute = require('./routes/adminReviewRoute');
 const placeRoutes = require('./routes/placeRoute');
+const tripRoutes = require('./routes/tripRoute');
+const adminDestinationRoutes = require('./routes/adminDestinationRoute');
+const adminReviewRoutes = require('./routes/adminReviewRoute');
+const notificationRoutes = require('./routes/notificationRoute');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 
 // ✅ 라우터 등록
@@ -38,6 +42,12 @@ app.use('/admin', adminDestinationRoute);
 app.use('/admin', adminReviewRoute);
 app.use('/trip', recommendationRoutes);
 app.use('/trip', placeRoutes);
+
+app.use('/trip', tripRoutes);
+app.use('/admin', adminDestinationRoutes);
+app.use('/admin', adminReviewRoutes);
+app.use('/notifications', notificationRoutes);
+
 
 
 // ✅ Swagger 설정
