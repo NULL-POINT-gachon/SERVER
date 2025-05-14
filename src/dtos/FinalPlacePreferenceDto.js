@@ -1,6 +1,6 @@
 // src/dtos/FinalPlacePreferenceDto.js
 class FinalPlacePreferenceDto {
-    constructor(city, activityType, activityIds, emotionIds, preferredTransport, companionsCount, activityLevel, placeName, tripDuration) 
+    constructor(city, activityType, activityIds, emotionIds, preferredTransport, companionsCount, activityLevel, placeName, tripDuration, visit_date, departure_date) 
     {
       this.city               = city;
       this.activityType       = activityType;
@@ -11,6 +11,8 @@ class FinalPlacePreferenceDto {
       this.activityLevel      = activityLevel;
       this.placeName          = placeName;
       this.tripDuration       = tripDuration;
+      this.visit_date         = visit_date;
+      this.departure_date     = departure_date;
     }
   
     /** Python 스크립트용 포맷 */

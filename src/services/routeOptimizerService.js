@@ -8,6 +8,124 @@ const { getDistanceMatrixFromGoogle } = require('../utils/googleMapUtils'); // �
 
 // ✅ 최적 경로 계산 (Google API 사용)
 exports.optimizeRouteFromClientData = async (optimizeRequestDto) => {
+  // const resultDays = [];
+  // let totalDistance = 0;
+  // let totalDuration = 0;
+
+  // for (const day of optimizeRequestDto.days) {
+  //   const placeTitles = day.items.map(p => p.title);
+  //   const coordinates = await getCoordinatesByPlaceNames(placeTitles);
+
+  //   // ✅ 카카오 Distance Matrix → 🔁 구글로 변경
+  //   const { distanceMatrix } = await getDistanceMatrixFromGoogle(coordinates);
+
+  //   const order = solveTSP(distanceMatrix);
+
+  //   const routeDetails = await getRouteDetailsFromOrder(
+  //     coordinates,
+  //     order,
+  //     optimizeRequestDto.transportMode
+  //   );
+
+  //   // ✅ 디버깅: 각 day 마다 출력
+  //   console.log(`🧭 Day ${day.day}`);
+  //   console.log('📍 Coordinates:', coordinates);
+  //   console.log('📐 Distance Matrix:', distanceMatrix);
+  //   console.log('📊 TSP Order:', order);
+  //   console.log('🚗 Route Details:', routeDetails);
+
+  //   const orderedItems = order.map((idx, i) => {
+  //     const original = day.items[idx];
+  //     const next = routeDetails[i] || {};
+  //     const coord = coordinates[idx]; // ✅ 좌표 정보 추가
+
+  //     return {
+  //       title: original.title,
+  //       time: original.time,
+  //       tags: original.tags,
+  //       image: original.image,
+  //       order: i + 1,
+  //       lat: coord.lat,               // ✅ 추가
+  //       lng: coord.lng,               // ✅ 추가
+  //       nextPlaceDistance: next.distance ?? null,
+  //       nextPlaceDuration: next.duration ?? null,
+  //       nextPlaceTransport: optimizeRequestDto.transportMode
+  //     };
+  //   });
+
+  //   const dayDistance = routeDetails.reduce((acc, cur) => acc + (cur.distance || 0), 0);
+  //   const dayDuration = routeDetails.reduce((acc, cur) => acc + (cur.duration || 0), 0);
+
+  //   resultDays.push({
+  //     day: day.day,
+  //     items: orderedItems,
+  //     totalDistance: parseFloat(dayDistance.toFixed(2)),
+  //     totalDuration: Math.round(dayDuration)
+  //   });
+
+  //   totalDistance += dayDistance;
+  //   totalDuration += dayDuration;
+  // }
+
+  // return {
+  //   days: resultDays,
+  //   totalDistance: parseFloat(totalDistance.toFixed(2)),
+  //   totalDuration: Math.round(totalDuration)
+  // };
+  // ✅ 테스트 모드
+  if (optimizeRequestDto.test === true || optimizeRequestDto.tripId === 'dummy') {
+    return {
+      days: [
+        {
+          day: 1,
+          items: [
+            {
+              title: "속초해수욕장",
+              time: "14:00",
+              tags: ["숙박", "도보"],
+              image: "/images/sokcho-beach.jpg",
+              lat: 38.206622,
+              lng: 128.591574,
+              order: 1,
+              nextPlaceDistance: 3000,
+              nextPlaceDuration: 1800,
+              nextPlaceTransport: "도보"
+            },
+            {
+              title: "설악산 국립공원",
+              time: "09:00",
+              tags: ["자연", "등산", "버스"],
+              image: "/images/seoraksan.jpg",
+              lat: 38.119444,
+              lng: 128.465833,
+              order: 2,
+              nextPlaceDistance: 5000,
+              nextPlaceDuration: 2400,
+              nextPlaceTransport: "도보"
+            },
+            {
+              title: "속초 중앙시장",
+              time: "11:00",
+              tags: ["쇼핑", "현지", "택시"],
+              image: "/images/market.jpg",
+              lat: 38.206222,
+              lng: 128.591948,
+              order: 3,
+              nextPlaceDistance: null,
+              nextPlaceDuration: null,
+              nextPlaceTransport: "도보"
+            }
+          ],
+          totalDistance: 8000,
+          totalDuration: 4200
+        }
+      ],
+      totalDistance: 8000,
+      totalDuration: 4200
+    };
+  }
+
+  // ✅ 실제 최적화 로직 복구 (주석 해제)
   const resultDays = [];
   let totalDistance = 0;
   let totalDuration = 0;
@@ -15,29 +133,16 @@ exports.optimizeRouteFromClientData = async (optimizeRequestDto) => {
   for (const day of optimizeRequestDto.days) {
     const placeTitles = day.items.map(p => p.title);
     const coordinates = await getCoordinatesByPlaceNames(placeTitles);
-
-    // ✅ 카카오 Distance Matrix → 🔁 구글로 변경
     const { distanceMatrix } = await getDistanceMatrixFromGoogle(coordinates);
-
     const order = solveTSP(distanceMatrix);
-
     const routeDetails = await getRouteDetailsFromOrder(
-      coordinates,
-      order,
-      optimizeRequestDto.transportMode
+      coordinates, order, optimizeRequestDto.transportMode
     );
-
-    // ✅ 디버깅: 각 day 마다 출력
-    console.log(`🧭 Day ${day.day}`);
-    console.log('📍 Coordinates:', coordinates);
-    console.log('📐 Distance Matrix:', distanceMatrix);
-    console.log('📊 TSP Order:', order);
-    console.log('🚗 Route Details:', routeDetails);
 
     const orderedItems = order.map((idx, i) => {
       const original = day.items[idx];
       const next = routeDetails[i] || {};
-      const coord = coordinates[idx]; // ✅ 좌표 정보 추가
+      const coord = coordinates[idx];
 
       return {
         title: original.title,
@@ -45,8 +150,8 @@ exports.optimizeRouteFromClientData = async (optimizeRequestDto) => {
         tags: original.tags,
         image: original.image,
         order: i + 1,
-        lat: coord.lat,               // ✅ 추가
-        lng: coord.lng,               // ✅ 추가
+        lat: coord.lat,
+        lng: coord.lng,
         nextPlaceDistance: next.distance ?? null,
         nextPlaceDuration: next.duration ?? null,
         nextPlaceTransport: optimizeRequestDto.transportMode
@@ -130,8 +235,8 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
   const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-            Math.sin(dLon / 2) ** 2;
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }

@@ -4,7 +4,7 @@ const db = require('../config/database');
 exports.findAllReviews = async () => {
   const query = `
     SELECT r.id, r.user_id, u.name as user_name, r.destination_id, 
-           d.destination_name, r.rating, r.review_content, 
+           d.name as destination_name, r.rating, r.content as review_content, 
            r.created_at, r.updated_at, r.status
     FROM Review r
     JOIN User u ON r.user_id = u.id
@@ -25,7 +25,7 @@ exports.findAllReviews = async () => {
 exports.findReviewById = async (reviewId) => {
   const query = `
     SELECT r.id, r.user_id, u.name as user_name, r.destination_id, 
-           d.destination_name, r.rating, r.review_content, 
+           d.name as destination_name, r.rating, r.content as review_content, 
            r.created_at, r.updated_at, r.status
     FROM Review r
     JOIN User u ON r.user_id = u.id

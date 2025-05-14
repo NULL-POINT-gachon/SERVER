@@ -31,6 +31,7 @@ router.get('/users', authMiddleware.authenticateToken, authMiddleware.requireAdm
  */
 router.get('/users/:userId', authMiddleware.authenticateToken, authMiddleware.requireAdmin, controller.getUserById);
 
+
 /**
  * @swagger
  * /admin/users/{userId}/status:

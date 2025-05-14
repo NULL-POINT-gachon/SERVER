@@ -206,7 +206,7 @@ router.post('/schedule/:scheduleId/optimize', authMiddleware.authenticateToken, 
 router.put('/:tripId/transport', authMiddleware.authenticateToken, tripController.updateTransportation);
 router.get('/:tripId/map', authMiddleware.authenticateToken, tripController.getMapMarkers);
 router.post('/:tripId/optimize', authMiddleware.authenticateToken, tripController.optimizeTrip);
-router.put('/:shareId', authMiddleware.authenticateToken, tripSharecontroller.respondToShare);
+// router.put('/:shareId', authMiddleware.authenticateToken, tripSharecontroller.respondToShare);
 
 /**
  * @swagger
@@ -403,7 +403,8 @@ router.get('/all', authMiddleware.authenticateToken, tripController.getAllTrips)
  */
 // 기존 라우터 설정 아래에 추가
 router.get('/:tripId', authMiddleware.authenticateToken, tripController.getTripDetail);
-
+router.post   ('/trip/:tripId/schedule',        authMiddleware.authenticateToken, tripController.addSchedulePlace);
+router.delete ('/trip/:tripId/schedule/:sdId',  authMiddleware.authenticateToken, tripController.removeSchedulePlace);
 module.exports = router;
 
 /**

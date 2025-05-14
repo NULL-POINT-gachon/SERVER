@@ -36,3 +36,70 @@ exports.getDestinationById = async (req, res, next) => {
     next(error);
   }
 };
+
+// 여행지 등록
+exports.createDestination = async (req, res, next) => {
+  try {
+    const destinationData = req.body;
+    const newDestination = await adminDestinationService.createDestination(destinationData);
+    
+    res.status(201).json({
+      success: true,
+      message: '여행지 등록 성공',
+      data: newDestination
+    });
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message
+      });
+    }
+    next(error);
+  }
+};
+
+// 여행지 수정
+exports.updateDestination = async (req, res, next) => {
+  try {
+    const { destinationId } = req.params;
+    const updateData = req.body;
+    
+    const updatedDestination = await adminDestinationService.updateDestination(destinationId, updateData);
+    
+    res.status(200).json({
+      success: true,
+      message: '여행지 수정 성공',
+      data: updatedDestination
+    });
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message
+      });
+    }
+    next(error);
+  }
+};
+
+// 여행지 삭제
+exports.deleteDestination = async (req, res, next) => {
+  try {
+    const { destinationId } = req.params;
+    await adminDestinationService.deleteDestination(destinationId);
+    
+    res.status(200).json({
+      success: true,
+      message: '여행지 삭제 성공'
+    });
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({
+        success: false,
+        message: error.message
+      });
+    }
+    next(error);
+  }
+};
