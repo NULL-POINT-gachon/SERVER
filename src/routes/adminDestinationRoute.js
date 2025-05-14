@@ -72,6 +72,55 @@ router.get('/destinations/:destinationId', authenticateToken, requireAdmin, admi
 /**
  * @swagger
  * /admin/destinations/{destinationId}:
+ *   patch:
+ *     summary: 여행지 수정
+ *     tags: [AdminDestinations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: destinationId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               destination_name:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
+ *               phone_number:
+ *                 type: string
+ *               operating_hours:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 여행지 수정 성공
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 권한 없음
+ *       404:
+ *         description: 여행지를 찾을 수 없음
+ */
+router.patch('/destinations/:destinationId', authenticateToken, requireAdmin, adminDestinationController.updateDestination);
+
+/**
+ * @swagger
+ * /admin/destinations/{destinationId}:
  *   delete:
  *     summary: 여행지 삭제
  *     tags: [AdminDestinations]

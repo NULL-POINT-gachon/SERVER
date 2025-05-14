@@ -16,24 +16,27 @@ exports.getAllDestinations = async (req, res, next) => {
 };
 
 // 특정 여행지 상세 조회
-exports.getDestinationById = async (req, res, next) => {
+exports.getDestinationById = async (req, res) => {
   try {
-    const { destinationId } = req.params;
-    const destination = await adminDestinationService.getDestinationById(destinationId);
+    const destination = await adminDestinationService.getDestinationById(req.params.destinationId);
     
-    res.status(200).json({
+    if (!destination) {
+      return res.status(404).json({
+        success: false,
+        message: '여행지를 찾을 수 없습니다.'
+      });
+    }
+
+    res.json({
       success: true,
-      message: '여행지 상세 조회 성공',
       data: destination
     });
   } catch (error) {
-    if (error.status) {
-      return res.status(error.status).json({
-        success: false,
-        message: error.message
-      });
-    }
-    next(error);
+    console.error('여행지 상세 조회 중 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '여행지 상세 정보를 가져오는 중 오류가 발생했습니다.'
+    });
   }
 };
 
@@ -60,26 +63,33 @@ exports.createDestination = async (req, res, next) => {
 };
 
 // 여행지 수정
-exports.updateDestination = async (req, res, next) => {
+exports.updateDestination = async (req, res) => {
   try {
-    const { destinationId } = req.params;
-    const updateData = req.body;
-    
+    const destinationId = req.params.destinationId;
+    const updateData = {
+      destination_name: req.body.destination_name,
+      address: req.body.address,
+      description: req.body.description,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      category: req.body.category,
+      phone_number: req.body.phone_number,
+      operating_hours: req.body.operating_hours
+    };
+
     const updatedDestination = await adminDestinationService.updateDestination(destinationId, updateData);
     
-    res.status(200).json({
+    res.json({
       success: true,
-      message: '여행지 수정 성공',
-      data: updatedDestination
+      data: updatedDestination,
+      message: '여행지가 성공적으로 수정되었습니다.'
     });
   } catch (error) {
-    if (error.status) {
-      return res.status(error.status).json({
-        success: false,
-        message: error.message
-      });
-    }
-    next(error);
+    console.error('여행지 수정 중 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '여행지 수정 중 오류가 발생했습니다.'
+    });
   }
 };
 

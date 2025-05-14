@@ -36,7 +36,7 @@ app.use('/review', reviewRoute);
 app.use('/admin', adminRoute);
 app.use('/admin', adminDestinationRoute);
 app.use('/admin', adminReviewRoute);
-app.use('/trip', recommendationRoutes);        // → /trip/recommendation/city
+app.use('/trip', recommendationRoutes);
 app.use('/trip', placeRoutes);
 
 

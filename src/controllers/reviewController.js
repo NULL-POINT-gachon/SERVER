@@ -2,7 +2,7 @@ const reviewService = require('../services/reviewService');
 
 exports.createReview = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { destination_id, rating, content } = req.body;
 
     const result = await reviewService.createReview({

@@ -38,6 +38,7 @@ const authenticateToken = (req, res, next) => {
         message: '유효하지 않은 토큰입니다'
       });
     }
+    console.log('✅ JWT 디코딩 결과:', user); // 👈 이거 추가해보세요!
 
     req.user = user;
     next();

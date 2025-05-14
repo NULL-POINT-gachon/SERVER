@@ -94,12 +94,11 @@ exports.getAllTrips = async (userId, page, limit, travel_status) => {
   };
 
   exports.addSchedulePlace = async (userId, tripId, dto) => {
-    // (권한검사 생략) dto: { title, description, time, visit_date, transport }
-    return await tripRepo.insertScheduleDestination(tripId, dto);
+    return await tripRepository.insertScheduleDestination(tripId, dto);
   };
   
   exports.removeSchedulePlace = async (userId, tripId, sdId) => {
-    return await tripRepo.deleteScheduleDestination(tripId, sdId);
+    return await tripRepository.deleteScheduleDestination(tripId, sdId);
   };
 
   // 여행 일정 상세 조회 서비스 함수

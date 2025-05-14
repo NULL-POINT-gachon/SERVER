@@ -1,5 +1,5 @@
 const tripOptimizerService = require('../services/routeOptimizerService');
-const tripservice = require('../services/tripService');
+const tripService = require('../services/tripService');
 
 const { TripCreateDto } = require('../dtos/tripDto');
 
@@ -133,7 +133,7 @@ exports.createTrip = async (req, res, next) => {
     );
     
     // 비즈니스 로직 처리를 서비스에 위임
-    const result = await tripservice.createTrip(userId, tripDto);
+    const result = await tripService.createTrip(userId, tripDto);
     console.log(result);
     
     // 성공 응답 반환
@@ -178,7 +178,7 @@ exports.getAllTrips = async (req, res, next) => {
     const userId = req.user.userId;
     
     // 비즈니스 로직 처리를 서비스에 위임
-    const result = await tripservice.getAllTrips(userId, page, limit, travelStatus);
+    const result = await tripService.getAllTrips(userId, page, limit, travelStatus);
     
     // 성공 응답 반환
     res.status(200).json(result);
@@ -204,7 +204,7 @@ exports.addSchedulePlace = async (req,res,next) => {
     const userId = req.user.userId;
     const { tripId } = req.params;
     const dto = { ...req.body };      // title, time, visit_date, transport …
-    const result = await tripSvc.addSchedulePlace(userId, Number(tripId), dto);
+    const result = await tripService.addSchedulePlace(userId, Number(tripId), dto);
     res.status(201).json({ result_code:201, data: result });
   } catch(err){ next(err); }
 };
@@ -214,7 +214,7 @@ exports.removeSchedulePlace = async (req,res,next) => {
   try {
     const userId = req.user.userId;
     const { tripId, sdId } = req.params;
-    await tripSvc.removeSchedulePlace(userId, Number(tripId), Number(sdId));
+    await tripService.removeSchedulePlace(userId, Number(tripId), Number(sdId));
     res.json({ result_code:200, deleted:true });
   } catch(err){ next(err); }
 };
@@ -224,7 +224,7 @@ exports.getTripDetail = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const { tripId } = req.params;
-    const { trip, schedule } = await tripservice.getTripDetail(userId, tripId);
+    const { trip, schedule } = await tripService.getTripDetail(userId, tripId);
     res.status(200).json({ result_code: 200, trip, schedule });
   } catch (err) { next(err); }
 };
@@ -246,7 +246,7 @@ exports.updateTripBasicInfo = async (req, res, next) => {
     // JWT 인증 미들웨어에서 설정한 사용자 ID 가져오기
     
     // 서비스 함수 호출
-    const result = await tripservice.updateTripBasicInfo(userId, tripId, {
+    const result = await tripService.updateTripBasicInfo(userId, tripId, {
       일정명,
       여행상태
     });

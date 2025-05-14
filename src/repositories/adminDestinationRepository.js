@@ -8,7 +8,7 @@ exports.findAllDestinations = async () => {
     FROM TravelDestination
     ORDER BY id DESC
   `;
-  
+
   try {
     const [destinations] = await db.execute(query);
     return destinations;
@@ -21,12 +21,12 @@ exports.findAllDestinations = async () => {
 // 특정 여행지 상세 조회
 exports.findDestinationById = async (destinationId) => {
   const query = `
-    SELECT id, name, description, latitude, longitude,
-           category, indoor_outdoor, admission_fee, image, status
+    SELECT id, name as destination_name, description, latitude, longitude,
+           category, indoor_outdoor, admission_fee as phone_number, image as operating_hours, status
     FROM TravelDestination
     WHERE id = ?
   `;
-  
+
   try {
     const [destinations] = await db.execute(query, [destinationId]);
     return destinations[0] || null;
@@ -44,7 +44,7 @@ exports.createDestination = async (destinationData) => {
       category, indoor_outdoor, admission_fee, image, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
   `;
-  
+
   const values = [
     destinationData.name,
     destinationData.description,
@@ -53,9 +53,9 @@ exports.createDestination = async (destinationData) => {
     destinationData.category,
     destinationData.indoor_outdoor,
     destinationData.admission_fee,
-    destinationData.image
+    destinationData.image // image 필드만 사용
   ];
-  
+
   try {
     const [result] = await db.execute(query, values);
     return { id: result.insertId, ...destinationData, status: 1 };
@@ -66,32 +66,40 @@ exports.createDestination = async (destinationData) => {
 };
 
 // 여행지 수정
+// 여행지 수정
 exports.updateDestination = async (destinationId, updateData) => {
   const query = `
     UPDATE TravelDestination
-    SET name = ?,
-        description = ?,
-        latitude = ?,
-        longitude = ?,
-        category = ?,
-        indoor_outdoor = ?,
-        admission_fee = ?,
-        image = ?
-    WHERE id = ?
+SET name = ?,
+    description = ?,
+    latitude = ?,
+    longitude = ?,
+    category = ?,
+    indoor_outdoor = ?,
+    admission_fee = ?, 
+    image = ?, 
+    operating_hours = ?,          -- ✅ 추가
+    phone_number = ?              -- ✅ 추가
+WHERE id = ?
   `;
-  
+
+  // undefined를 방지하기 위한 안전 처리 함수
+  const safe = (val) => val === undefined ? null : val;
+
   const values = [
-    updateData.name,
-    updateData.description,
-    updateData.latitude,
-    updateData.longitude,
-    updateData.category,
-    updateData.indoor_outdoor,
-    updateData.admission_fee,
-    updateData.image,
+    safe(updateData.destination_name),
+    safe(updateData.description),
+    safe(updateData.latitude),
+    safe(updateData.longitude),
+    safe(updateData.category),
+    safe(updateData.indoor_outdoor),
+    safe(updateData.admission_fee),         // 숫자
+    safe(updateData.image),
+    safe(updateData.operating_hours),       // 문자열
+    safe(updateData.phone_number),          // 문자열
     destinationId
   ];
-  
+
   try {
     const [result] = await db.execute(query, values);
     if (result.affectedRows === 0) {
@@ -111,7 +119,7 @@ exports.deleteDestination = async (destinationId) => {
     SET status = 0
     WHERE id = ?
   `;
-  
+
   try {
     const [result] = await db.execute(query, [destinationId]);
     return result.affectedRows > 0;
