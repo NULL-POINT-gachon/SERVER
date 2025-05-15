@@ -34,3 +34,13 @@ exports.updateReview = async (reviewId, data) => {
 exports.deleteReview = async (reviewId) => {
   await reviewRepository.deleteReview(reviewId);
 };
+
+//  새로 추가: 사용자가 리뷰를 작성한 여행지 ID 목록 반환
+exports.getReviewedDestinationsByUser = async (userId) => {
+  return await reviewRepository.getReviewedDestinationIdsByUser(userId);
+};
+
+//  새로 추가: 특정 사용자가 특정 여행지에 리뷰를 작성했는지 확인
+exports.hasUserReviewedDestination = async (userId, destinationId) => {
+  return await reviewRepository.hasUserReviewedDestination(userId, destinationId);
+};

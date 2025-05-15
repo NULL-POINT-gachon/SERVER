@@ -112,3 +112,25 @@ exports.findHotPlacesLastWeek = async () => {
   );
   return rows;        // [{id,title,image,review_count,rating}, ...]
 };
+
+// 새로 추가: 특정 사용자가 특정 여행지에 리뷰를 작성했는지 확인
+exports.hasUserReviewedDestination = async (userId, destinationId) => {
+  const [rows] = await db.query(`
+    SELECT COUNT(*) as count 
+    FROM Review 
+    WHERE user_id = ? AND destination_id = ? AND status = 1
+  `, [userId, destinationId]);
+  
+  return rows[0].count > 0; // true/false 반환
+};
+
+// 새로 추가: 사용자가 리뷰를 작성한 모든 여행지 ID 목록 반환
+exports.getReviewedDestinationIdsByUser = async (userId) => {
+  const [rows] = await db.query(`
+    SELECT DISTINCT destination_id 
+    FROM Review 
+    WHERE user_id = ? AND status = 1
+  `, [userId]);
+  
+  return rows.map(row => row.destination_id);
+};

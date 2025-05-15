@@ -117,4 +117,34 @@ router.get('/user/:userId', authMiddleware.authenticateToken, controller.getRevi
 router.put('/:reviewId', authMiddleware.authenticateToken, controller.updateReview);
 router.delete('/:reviewId', authMiddleware.authenticateToken, controller.deleteReview);
 router.get('/hot-destinations', controller.getHotPlaces);
+
+/**
+ * @swagger
+ * /review/reviewed-destinations:
+ *   get:
+ *     summary: 현재 사용자가 리뷰를 작성한 여행지 ID 목록 조회
+ *     tags: [Review]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 리뷰 작성 여행지 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ *                   description: 리뷰를 작성한 여행지 ID 목록
+ *                   example: [1, 3, 7, 12]
+ *       401:
+ *         description: 인증 필요
+ *       500:
+ *         description: 서버 오류
+ */
+router.get('/reviewed-destinations', authMiddleware.authenticateToken, controller.getUserReviewedDestinations);
+
 module.exports = router;
