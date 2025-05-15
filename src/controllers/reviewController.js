@@ -63,7 +63,9 @@ exports.createOrUpdateReview = async (req, res) => {
 exports.getReviewsByPlace = async (req, res) => {
   try {
     const destinationId = Number(req.params.destinationId);
-    const reviews = await reviewService.getReviewsByDestination(destinationId);
+    const currentUserId = req.user.userId; // 현재 로그인한 사용자 ID
+
+    const reviews = await reviewService.getReviewsByDestination(destinationId , currentUserId);
     res.status(200).json({data : reviews});
   } catch (error) {
     console.error('리뷰 조회 오류:', error);

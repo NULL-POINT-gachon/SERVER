@@ -59,12 +59,19 @@ exports.upsertReview = async ({ userId, destinationId, rating, content }) => {
   return { reviewId, updated: isUpdate };
 };
 
-exports.findByDestinationId = async (destinationId) => {
+exports.findByDestinationId = async (destinationId , currentUserId) => {
   const [rows] = await db.query(`
-    SELECT * FROM Review 
-    WHERE destination_id = ? AND status = 1 
-    ORDER BY created_at DESC
-  `, [destinationId]);
+    SELECT 
+      r.*,
+      u.name as user_name,
+      CASE WHEN r.user_id = ? THEN 1 ELSE 0 END as is_my_review
+    FROM Review r
+    JOIN User u ON r.user_id = u.id
+    WHERE r.destination_id = ? AND r.status = 1 
+    ORDER BY 
+      CASE WHEN r.user_id = ? THEN 0 ELSE 1 END,  -- 내 리뷰 우선
+      r.created_at DESC
+  `, [currentUserId, destinationId, currentUserId]);
   return rows;
 };
 

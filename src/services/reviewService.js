@@ -18,8 +18,8 @@ exports.upsertReview = async ({ userId, destinationId, rating, content }) => {
   return await reviewRepository.upsertReview({ userId, destinationId, rating, content });
 };
 
-exports.getReviewsByDestination = async (destinationId) => {
-  return await reviewRepository.findByDestinationId(destinationId);
+exports.getReviewsByDestination = async (destinationId,currentUserId) => {
+  return await reviewRepository.findByDestinationId(destinationId,currentUserId);
 };
 exports.getAllReviews = async () => {
   return await reviewRepository.getAllReviews();
