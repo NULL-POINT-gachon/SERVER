@@ -3,8 +3,8 @@ const db = require('../config/database');
 // 모든 여행지 목록 조회
 exports.findAllDestinations = async () => {
   const query = `
-    SELECT id, name, description, latitude, longitude,
-           category, indoor_outdoor, admission_fee, image, status
+    SELECT id, destination_name, destination_description, latitude, longitude,
+           category, indoor_outdoor, entrance_fee, image
     FROM TravelDestination
     ORDER BY id DESC
   `;

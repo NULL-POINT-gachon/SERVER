@@ -1,5 +1,15 @@
 const db = require('../config/database');
 
+const getLatestUsers = async () => {
+  const query = `SELECT * FROM User ORDER BY created_at DESC LIMIT 3`;
+  try {
+    const [rows] = await db.execute(query);
+    return rows;
+  } catch (error) {
+    console.error('최근 사용자 조회 중 오류:', error);
+    throw error;
+  }
+};
 const findUserByEmail = async (email) => {
   const query = `SELECT * FROM User WHERE email = ?`;
   
@@ -95,11 +105,26 @@ const updateUserRole = async (userId, role) => {
   }
 };
 
+const countUsers = async () => {
+  const query = `SELECT COUNT(*) AS userCnt FROM User`;
+  try {
+    const [rows] = await db.execute(query);
+    console.log("> rows", rows);
+    console.log("> rows[0].count", rows[0].userCnt);
+    return rows[0].userCnt;
+  } catch (error) {
+    console.error('사용자 수 조회 중 오류:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   findUserByEmail,
   findUserById,
   createUser , 
   updateUser ,
   findAdmins ,
-  updateUserRole
+  updateUserRole,
+  countUsers,
+  getLatestUsers
 };

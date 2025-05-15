@@ -33,7 +33,7 @@ const adminDestinationRoutes = require('./routes/adminDestinationRoute');
 const adminReviewRoutes = require('./routes/adminReviewRoute');
 const notificationRoutes = require('./routes/notificationRoute');
 const recommendationRoutes = require('./routes/recommendationRoutes');
-
+const adminSummaryRoutes = require('./routes/adminSummaryRouter');
 // ✅ 라우터 등록
 app.use('/user', userRoute);
 app.use('/trip', tripRoute);
@@ -50,7 +50,7 @@ app.use('/trip', tripRoutes);
 app.use('/admin', adminDestinationRoutes);
 app.use('/admin', adminReviewRoutes);
 app.use('/notifications', notificationRoutes);
-
+app.use('/admin', adminSummaryRoutes);
 
 
 // ✅ Swagger 설정

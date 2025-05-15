@@ -148,6 +148,17 @@ class PlaceRepository {
       throw error;
     }
   }
+
+  async countPlaces() {
+    const query = `SELECT COUNT(*) AS placeCnt FROM TravelDestination`;
+    try {
+      const [rows] = await db.execute(query);
+      return rows[0].placeCnt;
+    } catch (error) {
+      console.error('여행지 수 조회 중 오류:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new PlaceRepository();

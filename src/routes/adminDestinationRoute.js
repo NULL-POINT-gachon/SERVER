@@ -43,6 +43,8 @@ const { authenticateToken, requireAdmin } = require('../middlewares/auth');
  */
 router.get('/destinations', authenticateToken, requireAdmin, adminDestinationController.getAllDestinations);
 
+router.post('/destinations', authenticateToken, requireAdmin, adminDestinationController.createDestination);
+
 /**
  * @swagger
  * /admin/destinations/{destinationId}:

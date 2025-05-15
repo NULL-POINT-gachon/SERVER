@@ -1,5 +1,16 @@
 const db = require('../config/database');
 
+exports.getLatestReviews = async () => {
+  const query = `SELECT * FROM Review ORDER BY created_at DESC LIMIT 5`;
+  try {
+    const [rows] = await db.execute(query);
+    return rows;
+  } catch (error) {
+    console.error('최근 리뷰 조회 중 오류:', error);
+    throw error;
+  }
+};
+
 exports.insertReview = async (userId, destinationId, rating, content) => {
   console.log("insertReview ▶", { userId, destinationId, rating, content });
   const [result] = await db.query(`
@@ -9,6 +20,18 @@ exports.insertReview = async (userId, destinationId, rating, content) => {
 
   return { reviewId: result.insertId };
 };
+
+exports.countReviews = async () => {
+  const query = `SELECT COUNT(*) AS reviewCnt FROM Review`;
+  try {
+    const [rows] = await db.execute(query);
+    return rows[0].reviewCnt;
+  } catch (error) {
+    console.error('리뷰 수 조회 중 오류:', error);
+    throw error;
+  }
+};
+
 
 // reviewRepository.js
 exports.upsertReview = async ({ userId, destinationId, rating, content }) => {

@@ -2,6 +2,17 @@
 const db = require('../config/database');
 console.log('데이터베이스 연결 객체 상태:', db ? '정상' : '실패');
 
+exports.countSchedules = async () => {
+  const query = `SELECT COUNT(*) AS scheduleCnt FROM TravelSchedule`;
+  try {
+    const [rows] = await db.execute(query);
+    return rows[0].scheduleCnt;
+  } catch (error) {
+    console.error('일정 수 조회 중 오류:', error);
+    throw error;
+  }
+};
+
 exports.getPlacesGroupedByDate = async (tripId) => {
   const [rows] = await db.query(`
     SELECT
@@ -333,7 +344,7 @@ exports.getTripById = async (userId, tripId) => {
 exports.getTripDestinations = async (tripId) => {
   const [rows] = await db.execute(`
     SELECT sd.id, sd.destination_id, sd.visit_order, sd.visit_duration, 
-           sd.visit_time, sd.visit_date, td.name AS destination_name
+           sd.visit_time, sd.visit_date, td.destination_name AS destination_name
     FROM ScheduleDestination sd
     JOIN TravelDestination td ON sd.destination_id = td.id
     WHERE sd.schedule_id = ?

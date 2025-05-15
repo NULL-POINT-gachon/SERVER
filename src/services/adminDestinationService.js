@@ -13,6 +13,14 @@ exports.getAllDestinations = async () => {
   }
 };
 
+exports.createDestination = async (destinationData) => {
+  try {
+    return await adminDestinationRepository.createDestination(destinationData);
+  } catch (error) {
+    console.error('여행지 등록 서비스 오류:', error);
+    throw error;
+  }
+};
 // 특정 여행지 상세 조회
 exports.getDestinationById = async (destinationId) => {
   try {
