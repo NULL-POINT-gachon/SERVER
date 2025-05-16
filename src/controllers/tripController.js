@@ -235,6 +235,8 @@ exports.getTripDetail = async (req, res, next) => {
     const userId = req.user.userId;
     const { tripId } = req.params;
     const { trip, schedule } = await tripService.getTripDetail(userId, tripId);
+    console.log("trip", trip);
+    console.log("schedule", schedule);
     res.status(200).json({ result_code: 200, trip, schedule });
   } catch (err) { next(err); }
 };

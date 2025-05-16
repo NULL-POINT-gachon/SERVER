@@ -32,6 +32,13 @@ exports.countReviews = async () => {
   }
 };
 
+exports.findReviewsByUserId = async (userId) => {
+  const [rows] = await db.query(`
+    SELECT * FROM Review
+    WHERE user_id = ? AND status = 1
+  `, [userId]);
+  return rows;
+};
 
 // reviewRepository.js
 exports.upsertReview = async ({ userId, destinationId, rating, content }) => {

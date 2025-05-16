@@ -123,7 +123,7 @@ class RecommendationService {
         enrichedRecommendations.push({
           ...recommendation,
           description: `${recommendation.item_name}의 아름다운 여행지입니다.`,
-          image: `/images/${recommendation.item_name.toLowerCase()}.png`
+          image: `/public/images/${recommendation.item_name.toLowerCase()}.png`
         });
       }
     }

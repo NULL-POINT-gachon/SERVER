@@ -85,6 +85,8 @@ const authMiddleware = require('../middlewares/auth');
  */
 router.post('/recommendation/preferences', authMiddleware.authenticateToken, placeController.getPlaceRecommendations);
 
+router.get('/hot-place/:id', authMiddleware.authenticateToken, placeController.getHotPlace);
+
 
 /**
  * @swagger

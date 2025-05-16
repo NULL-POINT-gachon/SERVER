@@ -49,11 +49,12 @@ exports.getDestinationById = async (destinationId) => {
 // 여행지 등록
 exports.createDestination = async (destinationData) => {
   try {
+    console.log("destinationData >> ", destinationData);
     // 필수 필드 검증
-    if (!destinationData.destination_name || !destinationData.address || !destinationData.category) {
+    if (!destinationData.destination_name || !destinationData.category) {
       throw {
         status: 400,
-        message: '장소명, 주소, 카테고리는 필수 입력 항목입니다.'
+        message: '장소명, 카테고리는 필수 입력 항목입니다.'
       };
     }
 
@@ -98,10 +99,10 @@ exports.updateDestination = async (destinationId, updateData) => {
     }
 
     // 필수 필드 검증
-    if (!updateData.destination_name || !updateData.address || !updateData.category) {
+    if (!updateData.destination_name || !updateData.category) {
       throw {
         status: 400,
-        message: '장소명, 주소, 카테고리는 필수 입력 항목입니다.'
+        message: '장소명, 카테고리는 필수 입력 항목입니다.'
       };
     }
 

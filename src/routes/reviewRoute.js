@@ -117,7 +117,7 @@ router.get('/user/:userId', authMiddleware.authenticateToken, controller.getRevi
 router.put('/:reviewId', authMiddleware.authenticateToken, controller.updateReview);
 router.delete('/:reviewId', authMiddleware.authenticateToken, controller.deleteReview);
 router.get('/hot-destinations', controller.getHotPlaces);
-
+router.get('/user-reviews', authMiddleware.authenticateToken, controller.getUserReviewedDestinations);
 /**
  * @swagger
  * /review/reviewed-destinations:

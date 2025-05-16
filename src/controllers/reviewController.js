@@ -66,6 +66,7 @@ exports.getReviewsByPlace = async (req, res) => {
     const currentUserId = req.user.userId; // 현재 로그인한 사용자 ID
 
     const reviews = await reviewService.getReviewsByDestination(destinationId , currentUserId);
+    console.log("reviews >>> ", reviews);
     res.status(200).json({data : reviews});
   } catch (error) {
     console.error('리뷰 조회 오류:', error);
@@ -113,6 +114,18 @@ exports.deleteReview = async (req, res) => {
     res.status(500).json({ message: '리뷰 삭제 실패', error });
   }
 };
+
+exports.getUserReviews = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const reviews = await reviewService.getUserReviews(userId);
+    res.status(200).json(reviews);
+  } catch (error) {
+    console.error('사용자 리뷰 조회 오류:', error);
+    res.status(500).json({ message: '사용자 리뷰 조회 실패' });
+  }
+};
+
 
 // 새로 추가: 사용자가 리뷰를 작성한 여행지 목록 조회
 exports.getUserReviewedDestinations = async (req, res) => {

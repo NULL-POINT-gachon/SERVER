@@ -1,24 +1,30 @@
 const placeRepository = require('../repositories/placeRepository');
 const { PlaceRecommendationDto } = require('../dtos/placePreferenceDto');
+const { HotPlaceDto } = require('../dtos/hotPlaceDto');
 const { FinalPlaceRecommendationDto } = require('../dtos/FinalPlacePreferenceDto');
 const { spawn } = require('child_process');
 const axios = require('axios');
 const path = require('path');
 class PlaceService {
+  
+  async getHotplace(id){
+    const place = await placeRepository.getHotplace(id);
+    return HotPlaceDto.toDto(place);
+  }
 
   getDefaultImage(category) {
     const categoryImages = {
-      '식당/카페': '/images/default-restaurant.png',
-      '상업지구(거리, 시장, 쇼핑시설)': '/images/default-market.png',
-      '해수욕장/해변/등대': '/images/default-beach.png',
-      '산/휴양림/수목원': '/images/default-mountain.png',
-      '박물관/전시관/미술관/기념관/과학관': '/images/default-museum.png',
-      '체험관': '/images/default-experience.png',
-      '놀이공원/테마파크': '/images/default-themepark.png',
-      '캠핑장/방갈로': '/images/default-camping.png'
+      '식당/카페': '/public/images/default-restaurant.png',
+      '상업지구(거리, 시장, 쇼핑시설)': '/public/images/default-market.png',
+      '해수욕장/해변/등대': '/public/images/default-beach.png',
+      '산/휴양림/수목원': '/public/images/default-mountain.png',
+      '박물관/전시관/미술관/기념관/과학관': '/public/images/default-museum.png',
+      '체험관': '/public/images/default-experience.png',
+      '놀이공원/테마파크': '/public/images/default-themepark.png',
+      '캠핑장/방갈로': '/public/images/default-camping.png'
     };
     
-    return categoryImages[category] || '/images/default-place.png';
+    return categoryImages[category] || '/public/images/default-place.png';
   }
 
   callPythonScript(detailArgs) {
@@ -77,6 +83,7 @@ class PlaceService {
       console.log('preferenceDto:', preferenceDto);
       // AI 서비스 요청 형식으로 변환
       const aiRequestData = preferenceDto.toAIRequestFormat();
+      console.log('aiRequestData:', aiRequestData);
       
       // Python 스크립트 호출
       const aiResponse = await this.callPythonScript(aiRequestData);
@@ -90,7 +97,7 @@ class PlaceService {
         id: (index + 1).toString(),
         title: place.place_name || place['여행지명'],
         description: place.description || `${place.place_name || place['여행지명']}의 멋진 장소입니다.`,
-        image: place.image || `/images/default-place.png`,
+        image: place.image || `/public/images/default-place.png`,
         tags: this.generatePlaceTags(place.activity_ids, place.emotion_ids, place['분류']),
       }));
       
@@ -130,7 +137,6 @@ class PlaceService {
         daysCnt = Math.max(1, Math.round((dt2 - dt1) / MS_DAY) + 1);
       }
       if (!daysCnt) daysCnt = 1;
-      console
   
       /* ----------  플랜 & flatPlaces ---------- */
       const perDay  = Math.ceil(places.length / daysCnt);

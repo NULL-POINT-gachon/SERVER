@@ -2,6 +2,15 @@
 const db = require('../config/database');
 
 class PlaceRepository {
+
+  async getHotplace(id){
+    const [rows] = await db.execute(
+      `SELECT * FROM TravelDestination WHERE id = ?`,
+      [id]
+    );
+    return rows[0];
+  }
+  
   async saveRecommendations(userId, tripId, places) {
     const conn = await db.getConnection();
     try {

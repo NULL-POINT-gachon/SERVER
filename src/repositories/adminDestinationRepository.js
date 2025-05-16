@@ -4,7 +4,7 @@ const db = require('../config/database');
 exports.findAllDestinations = async () => {
   const query = `
     SELECT id, destination_name, destination_description, latitude, longitude,
-           category, indoor_outdoor, entrance_fee, image
+           category, indoor_outdoor, entrance_fee, image, status
     FROM TravelDestination
     ORDER BY id DESC
   `;
@@ -21,8 +21,8 @@ exports.findAllDestinations = async () => {
 // 특정 여행지 상세 조회
 exports.findDestinationById = async (destinationId) => {
   const query = `
-    SELECT id, name as destination_name, description, latitude, longitude,
-           category, indoor_outdoor, admission_fee as phone_number, image as operating_hours, status
+    SELECT id, destination_name, destination_description, latitude, longitude,
+           category, indoor_outdoor, entrance_fee, image, status
     FROM TravelDestination
     WHERE id = ?
   `;
@@ -49,7 +49,7 @@ exports.createDestination = async (data) => {
 
   const vals = [
     data.destination_name,          // ← 필드명 통일 주의
-    data.description,
+    data.destination_description,
     data.latitude,
     data.longitude,
     data.category,
@@ -78,17 +78,15 @@ exports.createDestination = async (data) => {
 exports.updateDestination = async (destinationId, updateData) => {
   const query = `
     UPDATE TravelDestination
-SET name = ?,
-    description = ?,
-    latitude = ?,
-    longitude = ?,
-    category = ?,
-    indoor_outdoor = ?,
-    admission_fee = ?, 
-    image = ?, 
-    operating_hours = ?,          -- ✅ 추가
-    phone_number = ?              -- ✅ 추가
-WHERE id = ?
+    SET destination_name = ?,
+        destination_description = ?,
+        latitude = ?,
+        longitude = ?,
+        category = ?,
+        indoor_outdoor = ?,
+        entrance_fee = ?, 
+        image = ?
+    WHERE id = ?
   `;
 
   // undefined를 방지하기 위한 안전 처리 함수
@@ -96,15 +94,13 @@ WHERE id = ?
 
   const values = [
     safe(updateData.destination_name),
-    safe(updateData.description),
+    safe(updateData.destination_description),
     safe(updateData.latitude),
     safe(updateData.longitude),
     safe(updateData.category),
     safe(updateData.indoor_outdoor),
-    safe(updateData.admission_fee),         // 숫자
+    safe(updateData.entrance_fee),         // 숫자
     safe(updateData.image),
-    safe(updateData.operating_hours),       // 문자열
-    safe(updateData.phone_number),          // 문자열
     destinationId
   ];
 

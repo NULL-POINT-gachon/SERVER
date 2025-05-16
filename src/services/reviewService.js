@@ -12,6 +12,10 @@ exports.createReview = async ({ userId, destinationId, rating, content }) => {
 
 };
 
+  exports.getUserReviewsByUserId = async (userId) => {
+  return await reviewRepository.findReviewsByUserId(userId);
+};
+
 exports.getHotPlaces = async () => reviewRepository.findHotPlacesLastWeek();
 
 exports.upsertReview = async ({ userId, destinationId, rating, content }) => {

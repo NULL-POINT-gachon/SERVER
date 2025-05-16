@@ -3,6 +3,17 @@ const placeService = require('../services/placeService');
 const { PlacePreferenceDto } = require('../dtos/placePreferenceDto');
 const { FinalPlacePreferenceDto } = require('../dtos/FinalPlacePreferenceDto');
 
+const getHotPlace = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const place = await placeService.getHotplace(id);
+    res.status(200).json({ success: true, data: place });
+  } catch (error) {
+    console.error('여행지 추천 컨트롤러 오류:', error);
+    next(error);
+  }
+}
+
 const getPlaceRecommendations = async (req, res, next) => {
   try {
     // 요청 본문에서 데이터 추출
@@ -107,5 +118,6 @@ const getFinalPlaceRecommendations = async (req, res, next) => {
 
 module.exports = {
   getPlaceRecommendations,
-  getFinalPlaceRecommendations
+  getFinalPlaceRecommendations,
+  getHotPlace
 };
