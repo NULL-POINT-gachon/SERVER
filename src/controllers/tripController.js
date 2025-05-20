@@ -1,5 +1,6 @@
 const tripOptimizerService = require('../services/routeOptimizerService');
 const tripService = require('../services/tripService');
+const notificationService = require('../services/notificationService');
 
 const { TripCreateDto } = require('../dtos/tripDto');
 
@@ -214,6 +215,12 @@ exports.addSchedulePlace = async (req,res,next) => {
     const { tripId } = req.params;
     const dto = { ...req.body };      // title, time, visit_date, transport …
     const result = await tripService.addSchedulePlace(userId, Number(tripId), dto);
+     // 알림 생성
+    await notificationService.createPlaceAddedNotification(
+      userId,                    // 장소 추가한 사용자 ID
+      Number(tripId),            // 일정 ID
+      dto.title || dto.destination_name  // 장소 이름
+    );
     res.status(201).json({ result_code:201, data: result });
   } catch(err){ next(err); }
 };
@@ -223,8 +230,15 @@ exports.removeSchedulePlace = async (req,res,next) => {
   try {
     const { tripId } = req.params;
     const { destination_name } = req.body;
+    const userId = req.user.userId;
 
     await tripService.removeSchedulePlace(tripId, destination_name);
+        // 알림 생성
+    await notificationService.createPlaceRemovedNotification(
+      userId,             // 장소 삭제한 사용자 ID
+      Number(tripId),     // 일정 ID
+      destination_name    // 장소 이름
+    );
     res.json({ result_code:200, deleted:true });
   } catch(err){ next(err); }
 };
@@ -262,7 +276,11 @@ exports.updateTripBasicInfo = async (req, res, next) => {
       일정명,
       여행상태
     });
-    
+     // 알림 생성
+    await notificationService.createUpdateNotification(
+      userId,   // 수정한 사용자 ID
+      tripId    // 일정 ID
+    );
     // 성공 응답 반환
     res.status(200).json(result);
     

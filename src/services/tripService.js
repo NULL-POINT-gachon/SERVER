@@ -178,3 +178,26 @@ exports.getAllTrips = async (userId, page, limit, travel_status) => {
       throw { status: 500, message: '여행 일정 수정 중 서버 오류가 발생했습니다' };
     }
   };
+  // tripService.js에 추가
+exports.getScheduleIdByDestinationId = async (destinationId) => {
+  try {
+    return await tripRepository.findScheduleIdByDestinationId(destinationId);
+  } catch (error) {
+    console.error('여행지 기반 일정 ID 조회 오류:', error);
+    return null;
+  }
+};
+
+/**
+ * 특정 일수 이내에 시작하는 여행 일정 조회
+ * @param {number} days - 조회할 일수 범위
+ * @returns {Promise<Array>} - 여행 일정 목록
+ */
+exports.findTripsStartingWithinDays = async (days) => {
+  try {
+    return await tripRepository.findTripsStartingWithinDays(days);
+  } catch (error) {
+    console.error('임박 여행 일정 조회 오류:', error);
+    return [];
+  }
+};

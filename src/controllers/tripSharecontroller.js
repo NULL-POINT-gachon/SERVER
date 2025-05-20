@@ -1,4 +1,5 @@
 const service = require('../services/tripShareservice');
+const notificationService = require('../services/notificationService');
 
 // ✅ 이메일 기반 일정 공유 요청
 exports.requestShareByEmail = async (req, res, next) => {
@@ -12,6 +13,18 @@ exports.requestShareByEmail = async (req, res, next) => {
       sharing_user_id,
       permission_level
     });
+    //알림
+ // 수신자 ID 가져오기 (초대받은 사용자)
+    const receiverUserId = result.receiver_user_id || result.receiver_id;
+    
+    // 알림 생성
+    if (receiverUserId) {
+      await notificationService.createInviteNotification(
+        sharing_user_id,      // 발신자 ID
+        receiverUserId,       // 수신자 ID
+        schedule_id           // 일정 ID
+      );
+    }
 
     res.status(201).json(result);
   } catch (err) {

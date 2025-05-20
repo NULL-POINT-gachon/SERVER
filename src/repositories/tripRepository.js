@@ -420,3 +420,32 @@ exports.cloneScheduleForUser = async (originalScheduleId, targetUserId) => {
 
   return newScheduleId;
 };
+
+exports.findScheduleIdByDestinationId = async (destinationId) => {
+  const query = `
+    SELECT schedule_id 
+    FROM ScheduleDestination 
+    WHERE destination_id = ? 
+    LIMIT 1`;
+  
+  const [rows] = await db.query(query, [destinationId]);
+  return rows.length > 0 ? rows[0].schedule_id : null;
+};
+
+/**
+ * 현재 날짜로부터 지정된 일수 이내에 시작하는 여행 일정 조회
+ * @param {number} days - 조회할 일수 범위
+ * @returns {Promise<Array>} - 여행 일정 목록
+ */
+exports.findTripsStartingWithinDays = async (days) => {
+  const query = `
+    SELECT ts.*, u.id as owner_id, u.name as owner_name
+    FROM TravelSchedule ts
+    JOIN User u ON ts.user_id = u.id
+    WHERE ts.departure_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ? DAY)
+    AND ts.travel_status = 'planned'
+  `;
+  
+  const [rows] = await db.query(query, [days]);
+  return rows;
+};

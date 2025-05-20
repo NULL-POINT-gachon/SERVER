@@ -143,11 +143,49 @@ const countUnreadByUserId = async (userId) => {
   }
 };
 
+/**
+ * 여러 알림 한번에 생성 (트랜잭션 처리)
+ * @param {Array<Object>} notificationsData - 알림 데이터 배열
+ * @returns {Promise<Array<number>>} - 생성된 알림 ID 배열
+ */
+const createMultiple = async (notificationsData) => {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    
+    const notificationIds = [];
+    
+    for (const data of notificationsData) {
+      const { user_id, type, message, trip_id, sender_id } = data;
+      
+      const [result] = await connection.execute(`
+        INSERT INTO Notification 
+        (user_id, type, message, trip_id, sender_id) 
+        VALUES (?, ?, ?, ?, ?)
+      `, [user_id, type, message, trip_id || null, sender_id || null]);
+      
+      notificationIds.push(result.insertId);
+    }
+    
+    await connection.commit();
+    return notificationIds;
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('알림 일괄 생성 중 오류:', error);
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+};
+
+
 module.exports = {
   findByUserId,
   findById,
   create,
   updateReadStatus,
   markAllAsRead,
-  countUnreadByUserId
+  countUnreadByUserId ,
+  createMultiple
 };

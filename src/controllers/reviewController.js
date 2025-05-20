@@ -1,5 +1,8 @@
 const reviewService = require('../services/reviewService');
 const tripService = require('../services/tripService');
+//알림
+const notificationService = require('../services/notificationService');
+
 exports.createReview = async (req, res) => {
   try {
     console.log("createReview ▶", req.body);
@@ -14,6 +17,23 @@ exports.createReview = async (req, res) => {
       rating,
       content
     });
+
+    // 해당 여행지가 속한 일정 ID 찾기
+    const scheduleId = await tripService.getScheduleIdByDestinationId(destinationId);
+    
+    // 관련 일정이 있는 경우에만 알림 생성
+    if (scheduleId) {
+      try {
+        await notificationService.createCommentNotification(
+          userId,    // 댓글 작성자 ID
+          scheduleId // 여행 일정 ID
+        );
+      } catch (notificationError) {
+        console.error('리뷰 알림 생성 실패:', notificationError);
+        // 알림 생성 실패해도 리뷰 작성은 성공으로 처리
+      }
+    }
+
 
     res.status(201).json({ message: '리뷰 작성 성공', reviewId: result.reviewId });
   } catch (error) {

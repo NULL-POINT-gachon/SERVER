@@ -21,7 +21,10 @@ exports.createShareByEmail = async ({ email, schedule_id, sharing_user_id, permi
 
   await sendShareInvitation({ toEmail: email, shareId: shareRecord.id });
 
-  return { message: "초대 링크가 전송되었습니다." };
+  return { message: "초대 링크가 전송되었습니다." ,
+     receiver_user_id: user.id
+  }
+  ;
 };
 
 // ✅ 공유 요청 수락/거절

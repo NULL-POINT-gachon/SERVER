@@ -13,4 +13,11 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+pool.getTransaction = async function() {
+  const connection = await this.getConnection();
+  await connection.beginTransaction();
+  return connection;
+};
+
+
 module.exports = pool;
