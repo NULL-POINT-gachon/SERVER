@@ -67,6 +67,8 @@ exports.upsertReview = async ({ userId, destinationId, rating, content }) => {
 };
 
 exports.findByDestinationId = async (destinationId , currentUserId) => {
+  console.log(" <<< currentUserId >>> ",currentUserId);
+  console.log(" <<< destinationId >>> ",destinationId);
   const [rows] = await db.query(`
     SELECT 
       r.*,
@@ -74,7 +76,7 @@ exports.findByDestinationId = async (destinationId , currentUserId) => {
       CASE WHEN r.user_id = ? THEN 1 ELSE 0 END as is_my_review
     FROM Review r
     JOIN User u ON r.user_id = u.id
-    WHERE r.destination_id = ? AND r.status = 1 
+    WHERE r.destination_id = ? AND r.status = 0
     ORDER BY 
       CASE WHEN r.user_id = ? THEN 0 ELSE 1 END,  -- 내 리뷰 우선
       r.created_at DESC

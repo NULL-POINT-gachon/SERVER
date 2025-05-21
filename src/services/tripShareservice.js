@@ -12,6 +12,10 @@ exports.createShareByEmail = async ({ email, schedule_id, sharing_user_id, permi
     throw error;
   }
 
+  console.log(" <<< sharing_user_id >>> ",sharing_user_id);
+  console.log(" <<< user.id >>> ",user.id);
+  console.log(" <<< schedule_id >>> ",schedule_id);
+  console.log(" <<< permission_level >>> ",permission_level);
   const shareRecord = await shareRepo.insertShare({
     sharing_user_id,
     receiver_user_id: user.id,
@@ -39,14 +43,17 @@ exports.cancelShare = async (shareId) => {
 
 // ✅ 초대 수락 처리 (상태 변경 + 일정 복제)
 exports.acceptInvitation = async (shareId, userId) => {
+  console.log(" <<< shareId >>> ",shareId);
+  console.log(" <<< userId >>> ",userId);
   const share = await shareRepo.findShareById(shareId);
+  console.log(" <<< share >>> ",share);
   if (!share) {
     const err = new Error("해당 공유 요청을 찾을 수 없습니다.");
     err.status = 404;
     throw err;
   }
 
-  if (share.invite_status !== 'pending') {
+  if (share.invitation_status !== 'pending') {
     const err = new Error("이미 처리된 공유 요청입니다.");
     err.status = 400;
     throw err;
@@ -62,4 +69,9 @@ exports.acceptInvitation = async (shareId, userId) => {
     message: '일정을 성공적으로 수락하고 복제했습니다.',
     new_schedule_id: newScheduleId
   };
+};
+
+// 받은 초대 목록 조회
+exports.getInvitesForUser = async (userId) => {
+  return await shareRepo.findInvitesByReceiverId(userId);
 };

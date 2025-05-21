@@ -10,11 +10,21 @@ const getLatestUsers = async () => {
     throw error;
   }
 };
+
+const findUsersByEmails = async (emails) => {
+  const list = Array.isArray(emails) ? emails : [emails];   // 항상 배열로
+  const query = `SELECT * FROM User WHERE email IN (?)`;
+  const [rows] = await db.execute(query, [list]);           // mysql2의 배열 바인딩
+  return rows;                                              // 여러 행 반환
+}
+
 const findUserByEmail = async (email) => {
+  const target = Array.isArray(email) ? email[0] : email;
   const query = `SELECT * FROM User WHERE email = ?`;
   
   try {
-    const [rows] = await db.execute(query, [email]);
+    const [rows] = await db.execute(query, [target]);
+    console.log(" <<< rows >>> ",rows);
     return rows[0] || null;
   } catch (error) {
     console.error('이메일로 사용자 검색 중 오류:', error);

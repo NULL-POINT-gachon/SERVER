@@ -6,26 +6,28 @@ const db = require('../config/database');
  * @param {number} limit - 조회할 알림 수 (기본값: 20)
  * @param {number} offset - 건너뛸 알림 수 (기본값: 0)
  * @returns {Promise<Array>} - 알림 목록
+ * status 수정 필요요
  */
 const findByUserId = async (userId, limit = 20, offset = 0) => {
-  const query = `
-    SELECT n.id, n.user_id, n.type, n.message, n.is_read, n.created_at, 
-           n.trip_id, n.sender_id, u.name as sender_name,
-           ts.title as trip_title, ts.start_date, ts.end_date, ts.location
+  const sql = `
+    SELECT n.id, n.user_id, n.type, n.message, n.is_read, n.created_at,
+           n.trip_id, n.sender_id, u.name AS sender_name,
+           ts.schedule_name AS trip_title, ts.departure_date, ts.end_date, ts.travel_status
     FROM Notification n
-    LEFT JOIN User u ON n.sender_id = u.id
-    LEFT JOIN TravelSchedule ts ON n.trip_id = ts.id
+    LEFT JOIN User           u  ON n.sender_id = u.id
+    LEFT JOIN TravelSchedule ts ON n.trip_id   = ts.id
     WHERE n.user_id = ?
     ORDER BY n.created_at DESC
-    LIMIT ? OFFSET ?
+    LIMIT ? OFFSET ?;
   `;
 
   try {
-    const [notifications] = await db.execute(query, [userId, limit, offset]);
-    return notifications;
-  } catch (error) {
-    console.error('알림 조회 중 오류:', error);
-    throw error;
+    const params = [userId, String(limit), String(offset)];   // ★ 여기만 변경
+    const [rows] = await db.execute(sql, params);
+    return rows;
+  } catch (err) {
+    console.error("알림 조회 중 오류:", err);
+    throw err;
   }
 };
 

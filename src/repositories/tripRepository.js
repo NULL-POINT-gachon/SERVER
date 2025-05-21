@@ -380,6 +380,8 @@ exports.updateTripBasicInfo = async (tripId, userId, updateData) => {
 };
 
 exports.cloneScheduleForUser = async (originalScheduleId, targetUserId) => {
+  console.log(" <<< originalScheduleId >>> ",originalScheduleId);
+  console.log(" <<< targetUserId >>> ",targetUserId);
   const [rows] = await db.query(`SELECT schedule_name, city, departure_date, end_date FROM TravelSchedule WHERE id = ?`, [originalScheduleId]);
   const origin = rows[0];
   if (!origin) throw new Error('복제할 일정이 존재하지 않습니다.');

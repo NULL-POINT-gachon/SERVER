@@ -4,10 +4,15 @@ const userRepo = require('../repositories/userRepository');
 // ✅ 일정 공유 요청 삽입
 exports.insertShare = async ({ sharing_user_id, receiver_user_id, schedule_id, permission_level }) => {
   const sql = `
-    INSERT INTO ScheduleShare 
-    (sender_user_id, receiver_user_id, schedule_id, permission_level, invite_status, created_at)
-    VALUES (?, ?, ?, ?, 'pending', NOW())
-  `;
+  INSERT INTO ScheduleShare
+    (sharing_user_id, receiver_user_id, schedule_id,
+     permission_level, invitation_status, created_at)
+  VALUES (?, ?, ?, ?, 'pending', NOW())
+  ON DUPLICATE KEY UPDATE
+    permission_level = VALUES(permission_level),
+    invitation_status = 'pending',
+    updated_at = NOW()
+`;
   
   const [result] = await db.query(sql, [
     sharing_user_id,
@@ -18,11 +23,11 @@ exports.insertShare = async ({ sharing_user_id, receiver_user_id, schedule_id, p
 
   return {
     id: result.insertId,
-    sender_user_id: sharing_user_id,
+    sharing_user_id: sharing_user_id,
     receiver_user_id,
     schedule_id,
     permission_level,
-    invite_status: 'pending',
+    invitation_status: 'pending',
     created_at: new Date()
   };
 };
@@ -31,7 +36,7 @@ exports.insertShare = async ({ sharing_user_id, receiver_user_id, schedule_id, p
 exports.updateStatus = async (shareId, action) => {
   const sql = `
     UPDATE ScheduleShare
-    SET invite_status = ?
+    SET invitation_status = ?
     WHERE id = ?
   `;
   await db.query(sql, [action, shareId]);
@@ -67,9 +72,31 @@ exports.findShareById = async (shareId) => {
   return rows[0] || null;
 };
 
+// ✅ 이메일 초대 조회
+exports.findInvitesByReceiverId = async (receiverId) => {
+  const sql = `
+    SELECT ss.id              AS share_id,
+           ss.schedule_id,
+           ss.permission_level,
+           ss.created_at,
+           ts.schedule_name,
+           ts.departure_date,          -- 여행 시작일
+           ts.end_date,            -- 여행 종료일
+           u.name             AS sender_name
+    FROM   ScheduleShare ss
+    JOIN   TravelSchedule ts  ON ts.id = ss.schedule_id
+    JOIN   User           u   ON u.id = ss.sharing_user_id
+    WHERE  ss.receiver_user_id = ?
+      AND  ss.invitation_status = 'pending'
+    ORDER  BY ss.created_at DESC
+  `;
+  const [rows] = await db.query(sql, [receiverId]);
+  return rows;
+};
+
 exports.findCollaboratorsByScheduleId = async (scheduleId) => {
   const sql = `
-    SELECT u.id, u.name, u.email 
+    SELECT u.id, u.name, u.email   
     FROM ScheduleShare ss
     JOIN User u ON ss.receiver_user_id = u.id
     WHERE ss.schedule_id = ? 

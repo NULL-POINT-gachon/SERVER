@@ -100,4 +100,8 @@ router.post('/respond', authMiddleware.authenticateToken, controller.respondToIn
  *         description: 초대 수락 처리 결과
  */
 router.get('/invite/:shareId', authMiddleware.authenticateToken, controller.acceptInviteFromEmail);
+
+
+    
+router.get('/invites', authMiddleware.authenticateToken, controller.getMyInvites);
 module.exports = router;
