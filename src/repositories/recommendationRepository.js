@@ -33,29 +33,29 @@ class RecommendationRepository {
       }
       console.log('[step ⑥] PreferenceMood 추가 결과', emotionIds);
       // 4. 추천된 여행지들 등록
-      let order = 1;
-      for (const rec of recommendations) {
-        const [destRes] = await conn.execute(
-          `INSERT INTO TravelDestination
-           (destination_name, destination_description, latitude, longitude, category, image)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-            rec.item_name,
-            rec.description || `AI 추천 도시: ${rec.item_name}`,
-            rec.latitude || 0,
-            rec.longitude || 0,
-            rec.city_id,
-            rec.image || '/images/default.jpg'
-          ]
-        );
-        console.log('[step ⑦] TravelDestination 생성 결과', destRes.insertId);
-        await conn.execute(
-          `INSERT INTO ScheduleDestination
-           (destination_id, schedule_id, visit_order)
-           VALUES (?, ?, ?)`,
-          [destRes.insertId, scheduleId, order++]
-        );
-      }
+      // let order = 1;
+      // for (const rec of recommendations) {
+      //   // const [destRes] = await conn.execute(
+      //   //   `INSERT INTO TravelDestination
+      //   //    (destination_name, destination_description, latitude, longitude, category, image)
+      //   //    VALUES (?, ?, ?, ?, ?, ?)`,
+      //   //   [
+      //   //     rec.item_name,
+      //   //     rec.description || `AI 추천 도시: ${rec.item_name}`,
+      //   //     rec.latitude || 0,
+      //   //     rec.longitude || 0,
+      //   //     rec.city_id,
+      //   //     rec.image || '/images/default.jpg'
+      //   //   ]
+      //   // );
+      //   console.log('[step ⑦] TravelDestination 생성 결과', destRes.insertId);
+      //   await conn.execute(
+      //     `INSERT INTO ScheduleDestination
+      //      (destination_id, schedule_id, visit_order)
+      //      VALUES (?, ?, ?)`,
+      //     [destRes.insertId, scheduleId, order++]
+      //   );
+      // }
 
       await conn.commit();
       return { scheduleId, preferenceId };

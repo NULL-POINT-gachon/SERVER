@@ -42,6 +42,7 @@ exports.findReviewsByUserId = async (userId) => {
 
 // reviewRepository.js
 exports.upsertReview = async ({ userId, destinationId, rating, content }) => {
+  console.log("destinationId", destinationId);
   /* 새로 쓰거나, 이미 있으면 UPDATE */
   const [result] = await db.execute(
     `INSERT INTO Review
@@ -76,9 +77,8 @@ exports.findByDestinationId = async (destinationId , currentUserId) => {
       CASE WHEN r.user_id = ? THEN 1 ELSE 0 END as is_my_review
     FROM Review r
     JOIN User u ON r.user_id = u.id
-    WHERE r.destination_id = ? AND r.status = 0
+    WHERE r.destination_id = ? AND r.status = 1
     ORDER BY 
-      CASE WHEN r.user_id = ? THEN 0 ELSE 1 END,  -- 내 리뷰 우선
       r.created_at DESC
   `, [currentUserId, destinationId, currentUserId]);
   return rows;
@@ -142,11 +142,14 @@ exports.hasUserReviewedDestination = async (userId, destinationId) => {
 
 // 새로 추가: 사용자가 리뷰를 작성한 모든 여행지 ID 목록 반환
 exports.getReviewedDestinationIdsByUser = async (userId) => {
+  console.log("userId", userId);
   const [rows] = await db.query(`
-    SELECT DISTINCT destination_id 
+    SELECT DISTINCT destination_id, rating, review_content
     FROM Review 
     WHERE user_id = ? AND status = 1
   `, [userId]);
+
+  console.log("rows", rows);
   
   return rows.map(row => row.destination_id);
 };

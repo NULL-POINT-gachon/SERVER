@@ -406,6 +406,10 @@ router.get('/:tripId', authMiddleware.authenticateToken, tripController.getTripD
 router.post('/:tripId/schedule', authMiddleware.authenticateToken, tripController.addSchedulePlace);
 router.delete('/:tripId/schedule', authMiddleware.authenticateToken, tripController.removeSchedulePlace);
 router.delete('/:tripId', authMiddleware.authenticateToken, tripController.deleteTrip);
+
+router.delete('/:tripId/schedule/hide', authMiddleware.authenticateToken, tripController.hideSchedulePlace);
+router.post('/:tripId/schedule/restore', authMiddleware.authenticateToken, tripController.restoreSchedulePlace);
+
 module.exports = router;
 
 /**

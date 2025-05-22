@@ -157,7 +157,7 @@ exports.getTripDetailWithSchedule = async (userId, tripId) => {
 
   // 2. 장소 정보 조회 (is_selected 제거)
   const [rows] = await db.query(`
-    SELECT sd.id, sd.visit_date, sd.visit_order, sd.visit_time, sd.visit_duration,
+    SELECT sd.id, sd.visit_date, sd.visit_order, sd.visit_time, sd.visit_duration, sd.is_hidden, DATE_FORMAT(sd.visit_date, '%Y-%m-%d') AS visit_date_str,
            td.id AS destination_id, td.destination_name AS destination_name,
            td.latitude, td.longitude
     FROM ScheduleDestination sd
@@ -169,7 +169,7 @@ exports.getTripDetailWithSchedule = async (userId, tripId) => {
   // 3. 날짜별로 묶기
   const schedule = {};
   rows.forEach(r => {
-    const key = r.visit_date ? r.visit_date.toISOString().slice(0, 10) : '미정';
+    const key = r.visit_date_str || '미정';
     if (!schedule[key]) schedule[key] = [];
     schedule[key].push({
       id:            r.id,
@@ -179,12 +179,22 @@ exports.getTripDetailWithSchedule = async (userId, tripId) => {
       time:          r.visit_time,
       duration:      r.visit_duration,
       latitude:      r.latitude,
-      longitude:     r.longitude
+      longitude:     r.longitude,
+      isHidden:      r.is_hidden,
+      visitDate:     r.visit_date
       // isSelected: r.is_selected ← 제거됨
     });
   });
 
   return { trip, schedule };
+};
+
+exports.getTripDetail = async (userId, tripId) => {
+  const [rows] = await db.query(`
+    SELECT * FROM TravelSchedule WHERE id = ? AND user_id = ?`,
+    [tripId, userId]
+  );
+  return rows[0] || null;
 };
 
 /* ------------------------------------------------------------------
@@ -246,7 +256,8 @@ exports.addPlaceToSchedule = async (scheduleId, dto) => {
           SET visit_date = ?,
               visit_time = ?,
               visit_order = ?,
-              updated_at = NOW()
+              updated_at = NOW(),
+              is_hidden = 0,
         WHERE id = ?`,
       [
         dto.visit_date ?? null,
@@ -261,9 +272,9 @@ exports.addPlaceToSchedule = async (scheduleId, dto) => {
     const [sd] = await db.execute(
       `INSERT INTO ScheduleDestination
          (destination_id, schedule_id, visit_order,
-          visit_time, visit_date,
+          visit_time, visit_date, is_hidden,
           transportation_id, created_at, updated_at)
-       VALUES (?,?,?,?,?,NULL,NOW(),NOW())`,
+       VALUES (?,?,?,?,?,0,NULL,NOW(),NOW())`,
       [
         destId,
         scheduleId,
@@ -400,7 +411,7 @@ exports.cloneScheduleForUser = async (originalScheduleId, targetUserId) => {
   const newScheduleId = result.insertId;
 
   const [destinations] = await db.query(`
-    SELECT destination_id, visit_order, visit_duration, visit_time, visit_date
+    SELECT destination_id, visit_order, visit_duration, visit_time, visit_date, is_hidden
     FROM ScheduleDestination
     WHERE schedule_id = ?
   `, [originalScheduleId]);
@@ -408,15 +419,16 @@ exports.cloneScheduleForUser = async (originalScheduleId, targetUserId) => {
   for (const d of destinations) {
     await db.query(`
       INSERT INTO ScheduleDestination 
-      (destination_id, schedule_id, visit_order, visit_duration, visit_time, visit_date, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+      (destination_id, schedule_id, visit_order, visit_duration, visit_time, visit_date, is_hidden, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `, [
       d.destination_id,
       newScheduleId,
       d.visit_order,
       d.visit_duration,
       d.visit_time,
-      d.visit_date
+      d.visit_date,
+      d.is_hidden
     ]);
   }
 

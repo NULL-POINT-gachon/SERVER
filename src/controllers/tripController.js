@@ -1,6 +1,7 @@
 const tripOptimizerService = require('../services/routeOptimizerService');
 const tripService = require('../services/tripService');
 const notificationService = require('../services/notificationService');
+const placeRepository = require('../repositories/placeRepository');
 
 const { TripCreateDto } = require('../dtos/tripDto');
 
@@ -38,6 +39,87 @@ exports.getOptimizedRoute = async (req, res) => {
     res.status(500).json({ message: '최적 경로 계산 실패' });
   }
 };
+
+exports.hideSchedulePlace = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { destination_name } = req.body;
+
+    if (!destination_name) {
+      return res.status(400).json({
+        success: false,
+        message: "여행지명이 필요합니다."
+      });
+    }
+
+    console.log(`🙈 여행지 제거 요청: ${destination_name} (일정 ID: ${tripId})`);
+
+    // Repository 직접 호출 (Service 생략)
+    const result = await placeRepository.hideDestinationFromSchedule(tripId, destination_name);
+    
+    if (result) {
+      console.log(`✅ 여행지 제거 성공: ${destination_name}`);
+      res.json({
+        success: true,
+        message: "여행지가 제거되었습니다."
+      });
+    } else {
+      console.log(`❌ 여행지 제거 실패: ${destination_name} - 찾을 수 없음`);
+      res.status(404).json({
+        success: false,
+        message: "해당 여행지를 찾을 수 없습니다."
+      });
+    }
+
+  } catch (error) {
+    console.error('여행지 제거 실패:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "여행지 제거 중 오류가 발생했습니다."
+    });
+  }
+};
+
+exports.restoreSchedulePlace = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { destination_name, target_day } = req.body;
+
+    if (!destination_name) {
+      return res.status(400).json({
+        success: false,
+        message: "여행지명이 필요합니다."
+      });
+    }
+
+    console.log(`👁️  여행지 복원 요청: ${destination_name} (일정 ID: ${tripId})`);
+
+    // Repository 직접 호출
+    const result = await placeRepository.restoreDestinationToSchedule(tripId, destination_name);
+    
+    if (result) {
+      console.log(`✅ 여행지 복원 성공: ${destination_name}`);
+      res.json({
+        success: true,
+        message: "여행지가 복원되었습니다."
+      });
+    } else {
+      console.log(`❌ 여행지 복원 실패: ${destination_name} - 찾을 수 없음`);
+      res.status(404).json({
+        success: false,
+        message: "복원할 여행지를 찾을 수 없습니다."
+      });
+    }
+
+  } catch (error) {
+    console.error('여행지 복원 실패:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "여행지 복원 중 오류가 발생했습니다."
+    });
+  }
+};
+
 
 exports.saveOptimizedRoute = async (req, res) => {
   try {
@@ -209,20 +291,39 @@ exports.getAllTrips = async (req, res, next) => {
   }
 };
 
-exports.addSchedulePlace = async (req,res,next) => {
+exports.addSchedulePlace = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const { tripId } = req.params;
-    const dto = { ...req.body };      // title, time, visit_date, transport …
+    const dto = { ...req.body };
+    
     const result = await tripService.addSchedulePlace(userId, Number(tripId), dto);
-     // 알림 생성
+    
+    // 알림 생성
     await notificationService.createPlaceAddedNotification(
-      userId,                    // 장소 추가한 사용자 ID
-      Number(tripId),            // 일정 ID
-      dto.title || dto.destination_name  // 장소 이름
+      userId,
+      Number(tripId),
+      dto.destination_name
     );
-    res.status(201).json({ result_code:201, data: result });
-  } catch(err){ next(err); }
+    
+    res.status(201).json({ 
+      result_code: 201, 
+      data: {
+        ...result,
+        latitude: dto.latitude,
+        longitude: dto.longitude
+      }
+    });
+  } catch (err) {
+    // 404 에러는 그대로 전달
+    if (err.status === 404) {
+      return res.status(404).json({
+        result_code: 404,
+        message: err.message
+      });
+    }
+    next(err);
+  }
 };
 
 // ── 일정 한 건 삭제 ──────────────────────────
