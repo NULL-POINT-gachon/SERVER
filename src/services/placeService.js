@@ -208,9 +208,9 @@ class PlaceService {
             category: this.generatePlaceTags(p.activity_ids, p.emotion_ids, p['분류'])[0] ?? null,
             order: globalOrder,
             visit_date: visitDateISO,
-            // 🚀 새로 추가: 좌표 정보
-            lat: p.lat,
-            lng: p.lng,
+            // 🚀 좌표 정보 추가 (repository에서 기대하는 필드명으로)
+            latitude: p.lat,           // lat -> latitude
+            longitude: p.lng,          // lng -> longitude
             road_address: p.road_address || null,
             validation_source: p.source || 'kakao_api'
           });

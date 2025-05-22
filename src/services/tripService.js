@@ -2,6 +2,8 @@
 
 const tripRepository = require('../repositories/tripRepository');
 const { TripResponseDto } = require('../dtos/tripDto');
+const placeRepository = require('../repositories/placeRepository');
+
 
 exports.getDestinationIdByName = async (destination_name) => {
   return await tripRepository.getDestinationIdByName(destination_name);
@@ -16,6 +18,30 @@ exports.deleteTrip = async (userId, tripId) => {
   } catch (error) {
     console.error('여행 일정 삭제 서비스 오류:', error);
     throw { status: 500, message: '여행 일정 삭제 중 서버 오류가 발생했습니다' };
+  }
+};
+
+exports.hideDestinationFromSchedule = async (scheduleId, destinationName) => {
+  try {
+    console.log(`🙈 Service: 여행지 숨김 처리 - ${destinationName}`);
+    
+    const result = await placeRepository.hideDestinationFromSchedule(scheduleId, destinationName);
+    return result; // boolean 반환
+  } catch (error) {
+    console.error('Service: 여행지 숨김 처리 실패:', error);
+    throw error;
+  }
+};
+
+exports.restoreDestinationToSchedule = async (scheduleId, destinationName) => {
+  try {
+    console.log(`👁️  Service: 여행지 복원 처리 - ${destinationName}`);
+    
+    const result = await placeRepository.restoreDestinationToSchedule(scheduleId, destinationName);
+    return result; // boolean 반환
+  } catch (error) {
+    console.error('Service: 여행지 복원 처리 실패:', error);
+    throw error;
   }
 };
 
@@ -123,11 +149,72 @@ exports.getAllTrips = async (userId, page, limit, travel_status) => {
   };
 
   // 여행 일정 상세 조회 서비스 함수
-  exports.getTripDetail = async (userId, tripId) => {
-    const result = await tripRepository.getTripDetailWithSchedule(userId, tripId);
-    if (!result) throw { status: 404, message: '일정을 찾을 수 없습니다.' };
-    return result;
+  const axios = require('axios');
+
+exports.searchPlaceWithKakao = async (placeName) => {
+  try {
+    const response = await axios.get('https://dapi.kakao.com/v2/local/search/keyword.json', {
+      headers: {
+        'Authorization': `KakaoAK ${process.env.KAKAO_REST_API_KEY}`
+      },
+      params: {
+        query: placeName,
+        size: 1  // 가장 관련도 높은 1개만
+      }
+    });
+
+    if (response.data.documents && response.data.documents.length > 0) {
+      const place = response.data.documents[0];
+      return {
+        found: true,
+        data: {
+          place_name: place.place_name,
+          latitude: parseFloat(place.y),
+          longitude: parseFloat(place.x),
+          address: place.address_name,
+          category: place.category_name,
+          place_url: place.place_url
+        }
+      };
+    }
+
+    return { found: false };
+  } catch (error) {
+    console.error('카카오 API 검색 실패:', error);
+    throw error;
+  }
+};
+
+// tripService.js의 addSchedulePlace 수정
+exports.addSchedulePlace = async (userId, tripId, dto) => {
+  console.log("addSchedulePlace ▶", { userId, tripId, dto });
+  
+  // 카카오 API로 장소 검색
+  const searchResult = await this.searchPlaceWithKakao(dto.destination_name);
+  
+  if (!searchResult.found) {
+    // 장소를 찾지 못한 경우
+    const error = new Error(`"${dto.destination_name}" 장소를 찾을 수 없습니다.`);
+    error.status = 404;
+    throw error;
+  }
+  
+  // 카카오 API에서 찾은 정보로 dto 업데이트
+  const enrichedDto = {
+    ...dto,
+    destination_name: searchResult.data.place_name,
+    latitude: searchResult.data.latitude,
+    longitude: searchResult.data.longitude,
+    category: searchResult.data.category,
+    address: searchResult.data.address
   };
+  
+  return await tripRepository.addPlaceToSchedule(tripId, enrichedDto);
+};
+
+exports.getTripDetail = async (userId, tripId) => {
+  return await tripRepository.getTripDetailWithSchedule(userId, tripId);
+};
 
 
   exports.updateTripBasicInfo = async (userId, tripId, updateData) => {
